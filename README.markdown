@@ -19,7 +19,7 @@ The histograms act as an approximation of the underlying dataset.  They can be u
   Random random = new Random();
   Histogram hist = new Histogram(histogramBins);
 
-  for (long i = 0; i < pointCount; i++) {
+  for (long i = 0; i &lt pointCount; i++) {
     hist.insert(random.nextGaussian());
   }
 
