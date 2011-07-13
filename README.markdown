@@ -13,7 +13,7 @@ The histograms act as an approximation of the underlying dataset.  They can be u
 
 # Example
 
-`
+<pre>
   long pointCount = 100000;
   int histogramBins = 100;
   Random random = new Random();
@@ -23,5 +23,6 @@ The histograms act as an approximation of the underlying dataset.  They can be u
     hist.insert(random.nextGaussian());
   }
 
+  //the sum at 0 should be about 50000
   double sum = hist.sum(0);
-`
+</pre>
