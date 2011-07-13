@@ -25,4 +25,7 @@ for (long i = 0; i < pointCount; i++) {
 
 //the sum at 0 should be about 50000
 double sum = hist.sum(0);
+
+//the split point between two uniform bins should be about 0
+double split = hist.uniform(2).get(0);
 ```
