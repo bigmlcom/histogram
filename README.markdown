@@ -13,16 +13,16 @@ The histograms act as an approximation of the underlying dataset.  They can be u
 
 # Example
 
-<pre>
-  long pointCount = 100000;
-  int histogramBins = 100;
-  Random random = new Random();
-  Histogram hist = new Histogram(histogramBins);
+```java
+long pointCount = 100000;
+int histogramBins = 100;
+Random random = new Random();
+Histogram hist = new Histogram(histogramBins);
 
-  for (long i = 0; i &lt pointCount; i++) {
-    hist.insert(random.nextGaussian());
-  }
+for (long i = 0; i < pointCount; i++) {
+  hist.insert(random.nextGaussian());
+}
 
-  //the sum at 0 should be about 50000
-  double sum = hist.sum(0);
-</pre>
+//the sum at 0 should be about 50000
+double sum = hist.sum(0);
+```
