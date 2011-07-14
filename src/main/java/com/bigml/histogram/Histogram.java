@@ -47,6 +47,8 @@ public class Histogram {
     Histogram histogram = new Histogram(maxBins, bins);
     return histogram;
   }
+  
+  public static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.#####");
 
   public class SumOutOfRange extends Exception {
 
@@ -63,7 +65,7 @@ public class Histogram {
     _maxBins = maxBins;
     _bins = new TreeMap<Double, Bin>();
     _gaps = new TreeSet<Gap>();
-    _binsToGaps = new HashMap<Bin, Gap>();
+    _binsToGaps = new HashMap<Double, Gap>();
   }
 
   /**
@@ -80,13 +82,13 @@ public class Histogram {
     }
     mergeBins();
   }
-
+  
   /**
    * Inserts a new point into the histogram
    * @param  p  the new point
    */
   public void insert(double p) {
-    Bin newBin = new Bin(p, 1l);
+    Bin newBin = new Bin(p, 1d);
     insertBin(newBin);
     mergeBins();
   }
@@ -121,6 +123,7 @@ public class Histogram {
     double bDiff = p_b - bin_i.getMean();
     double pDiff = bin_i1.getMean() - bin_i.getMean();
     double m_b = bin_i.getCount() + (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
+
     double sum = prevSum
             + (bin_i.getCount() / 2)
             + ((bin_i.getCount() + m_b) / 2) * (bDiff / pDiff);
@@ -291,12 +294,12 @@ public class Histogram {
     double space = nextBin.getMean() - previousBin.getMean();
     Gap newGap = new Gap(space, previousBin, nextBin);
 
-    Gap previousGap = _binsToGaps.get(previousBin);
+    Gap previousGap = _binsToGaps.get(previousBin.getMean());
     if (previousGap != null) {
       _gaps.remove(previousGap);
     }
 
-    _binsToGaps.put(previousBin, newGap);
+    _binsToGaps.put(previousBin.getMean(), newGap);
     _gaps.add(newGap);
   }
 
@@ -305,7 +308,7 @@ public class Histogram {
       Gap smallestGap = _gaps.pollFirst();
       Bin newBin = Bin.combine(smallestGap.getStartBin(), smallestGap.getEndBin());
 
-      Gap followingGap = _binsToGaps.get(smallestGap.getEndBin());
+      Gap followingGap = _binsToGaps.get(smallestGap.getEndBin().getMean());
       if (followingGap != null) {
         _gaps.remove(followingGap);
       }
@@ -313,8 +316,8 @@ public class Histogram {
       _bins.remove(smallestGap.getStartBin().getMean());
       _bins.remove(smallestGap.getEndBin().getMean());
 
-      _binsToGaps.remove(smallestGap.getStartBin());
-      _binsToGaps.remove(smallestGap.getEndBin());
+      _binsToGaps.remove(smallestGap.getStartBin().getMean());
+      _binsToGaps.remove(smallestGap.getEndBin().getMean());
 
       updateGaps(newBin);
       _bins.put(newBin.getMean(), newBin);
@@ -358,9 +361,8 @@ public class Histogram {
     return bins;
   }
   
-  private static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.#####");
   private final int _maxBins;
   private final TreeMap<Double, Bin> _bins;
   private final TreeSet<Gap> _gaps;
-  private final HashMap<Bin, Gap> _binsToGaps;
+  private final HashMap<Double, Gap> _binsToGaps;
 }
