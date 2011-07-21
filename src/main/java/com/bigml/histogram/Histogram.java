@@ -22,6 +22,11 @@ import org.json.simple.parser.ParseException;
  * <code>createConstantWidthBins</code> is a convenience method for transforming the histogram into
  * evenly sized bins for visualization.
  * 
+ * <p>The histogram has an <code>insert</code> method which uses two parameters and an 
+ * <code>extendedSum</code> method which add the capabilities described in
+ * <a href="http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf">
+ * Tyree's paper</a>.
+ * 
  * @author Adam Ashenfelter (ashenfelter@bigml.com)
  */
 public class Histogram {
@@ -47,13 +52,19 @@ public class Histogram {
     Histogram histogram = new Histogram(maxBins, bins);
     return histogram;
   }
-  
   public static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.#####");
 
-  public class SumOutOfRange extends Exception {
+  public class SumOutOfRangeException extends Exception {
 
-    public SumOutOfRange(String string) {
+    public SumOutOfRangeException(String string) {
       super(string);
+    }
+  }
+
+  public class MixedInsertException extends Exception {
+
+    public MixedInsertException() {
+      super("Can't mix insert types");
     }
   }
 
@@ -66,6 +77,7 @@ public class Histogram {
     _bins = new TreeMap<Double, Bin>();
     _gaps = new TreeSet<Gap>();
     _binsToGaps = new HashMap<Double, Gap>();
+    _isExtendedInsert = null;
   }
 
   /**
@@ -82,53 +94,114 @@ public class Histogram {
     }
     mergeBins();
   }
-  
+
   /**
    * Inserts a new point into the histogram
    * @param  p  the new point
    */
-  public void insert(double p) {
-    Bin newBin = new Bin(p, 1d);
+  public void insert(double point) throws MixedInsertException {
+    if (_isExtendedInsert == null) {
+      _isExtendedInsert = false;
+    } else if (_isExtendedInsert) {
+      throw new MixedInsertException();
+    }
+
+    Bin newBin = new Bin(point, 1d);
     insertBin(newBin);
     mergeBins();
   }
 
   /**
-   * Returns the approximate number of points that are less than <code>p_b</code>
+   * Inserts a new point into the histogram
+   * @param  p  the new point
+   * @param  target  the target value for the point
+   */
+  public void insert(double point, double target) throws MixedInsertException {
+    if (_isExtendedInsert == null) {
+      _isExtendedInsert = true;
+    } else if (!_isExtendedInsert) {
+      throw new MixedInsertException();
+    }
+
+    Bin newBin = new Bin(point, 1d, target);
+    insertBin(newBin);
+    mergeBins();
+  }
+
+  /**
+   * Returns the approximate number of points less than <code>p_b</code>
    * @param  p_b the sum point
    */
-  public double sum(double p_b) throws SumOutOfRange {
+  public double sum(double p_b) throws SumOutOfRangeException {
+    return extendedSum(p_b).getCount();
+  }
+
+  /**
+   * Returns a <code>SumResult</code> object which contains the approximate number of points less
+   * than <code>p_b</code> along with the sum of their targets.
+   * @param  p_b the sum point
+   */
+  public SumResult extendedSum(double p_b) throws SumOutOfRangeException {
+    SumResult result = null;
+
     double min = _bins.firstKey();
     double max = _bins.lastKey();
 
     if (p_b < min || p_b > max) {
-      throw new SumOutOfRange("Sum point " + p_b + " should be between " + min + " and " + max);
+      throw new SumOutOfRangeException("Sum point " + p_b + " should be between " + min + " and " + max);
     } else if (p_b == max) {
+      Bin lastBin = _bins.lastEntry().getValue();
+
       double totalCount = this.getTotalCount();
-      double binCount = _bins.lastEntry().getValue().getWeight();
-      return totalCount - (binCount / 2d);
+      double count = totalCount - (lastBin.getCount() / 2d);
+
+      Double totalTargetSum = this.getTotalTargetSum();
+      if (totalTargetSum == null) {
+        result = new SumResult(count, null);
+      } else {
+        double targetSum = totalTargetSum - (lastBin.getTargetSum() / 2d);
+        result = new SumResult(count, targetSum);
+      }
+      return result;
     }
 
     Bin bin_i = _bins.floorEntry(p_b).getValue();
     Bin bin_i1 = _bins.higherEntry(p_b).getValue();
 
-    double prevSum = 0;
+    double prevCount = 0;
+    double prevTargetSum = 0;
     for (Bin bin : _bins.values()) {
       if (bin.equals(bin_i)) {
         break;
       }
-      prevSum += bin.getCount();
+      prevCount += bin.getCount();
+      if (bin.getTargetSum() != null) {
+        prevTargetSum += bin.getTargetSum();
+      }
     }
 
     double bDiff = p_b - bin_i.getMean();
     double pDiff = bin_i1.getMean() - bin_i.getMean();
+    double bpRatio = bDiff / pDiff;
     double m_b = bin_i.getCount() + (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
 
-    double sum = prevSum
-            + (bin_i.getCount() / 2)
-            + ((bin_i.getCount() + m_b) / 2) * (bDiff / pDiff);
 
-    return sum;
+    double countSum = prevCount
+            + (bin_i.getCount() / 2)
+            + ((bin_i.getCount() + m_b) / 2) * bpRatio;
+
+    if (bin_i.getTargetSum() != null) {
+      double targetSum_m_b = bin_i.getTargetSum()
+              + (((bin_i1.getTargetSum() - bin_i.getTargetSum()) / pDiff) * bDiff);
+      double targetSum = prevTargetSum
+              + (bin_i.getTargetSum() / 2)
+              + ((bin_i.getTargetSum() + targetSum_m_b) / 2) * bpRatio;
+      result = new SumResult(countSum, targetSum);
+    } else {
+      result = new SumResult(countSum, null);
+    }
+
+    return result;
   }
 
   /**
@@ -182,7 +255,7 @@ public class Histogram {
       Bin lastBin = new Bin(binCenter, lastBinCount);
       bins.add(lastBin);
 
-    } catch (SumOutOfRange ex) {
+    } catch (SumOutOfRangeException ex) {
     }
 
     return bins;
@@ -208,6 +281,22 @@ public class Histogram {
       count += bin.getCount();
     }
     return count;
+  }
+
+  /**
+   * Returns the total sum of the targets in the histogram
+   */
+  public Double getTotalTargetSum() {
+    Double targetSum = null;
+    for (Bin bin : _bins.values()) {
+      if (bin.getTargetSum() != null) {
+        if (targetSum == null) {
+          targetSum = 0d;
+        }
+        targetSum += bin.getTargetSum();
+      }
+    }
+    return targetSum;
   }
 
   /**
@@ -250,7 +339,7 @@ public class Histogram {
       try {
         double sum = sum(bin.getMean());
         binSumMap.put(sum, bin);
-      } catch (SumOutOfRange e) {
+      } catch (SumOutOfRangeException e) {
       }
     }
     return binSumMap;
@@ -270,10 +359,17 @@ public class Histogram {
 
     double d = s - sumP_i;
     double a = m_i1 - m_i;
-    double b = 2 * m_i;
-    double c = -2 * d;
-    double z = findZ(a, b, c);
-    double u = (p_i + (p_i1 - p_i) * z);
+
+    double u;
+    if (a == 0) {
+      double offset = d / ((m_i + m_i1) / 2);
+      u = p_i + (offset * (p_i1 - p_i));
+    } else {
+      double b = 2 * m_i;
+      double c = -2 * d;
+      double z = findZ(a, b, c);
+      u = (p_i + (p_i1 - p_i) * z);
+    }
 
     return u;
   }
@@ -355,14 +451,19 @@ public class Histogram {
       JSONArray binJSON = (JSONArray) iter.next();
       double mean = Double.valueOf(binJSON.get(0).toString());
       double count = Double.valueOf(binJSON.get(1).toString());
-      bins.add(new Bin(mean, count));
+      if (binJSON.size() > 2) {
+        double targetSum = Double.valueOf(binJSON.get(2).toString());
+        bins.add(new Bin(mean, count, targetSum));
+      } else {
+        bins.add(new Bin(mean, count));
+      }
     }
 
     return bins;
   }
-  
   private final int _maxBins;
   private final TreeMap<Double, Bin> _bins;
   private final TreeSet<Gap> _gaps;
   private final HashMap<Double, Gap> _binsToGaps;
+  private Boolean _isExtendedInsert;
 }

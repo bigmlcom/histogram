@@ -8,21 +8,37 @@ public class Bin {
   public static Bin combine(Bin bin1, Bin bin2) {
     double totalCount = bin1.getCount() + bin2.getCount();
     double newMean = (bin1.getWeight() + bin2.getWeight()) / (double) totalCount;
-    return new Bin(newMean, totalCount);
+
+    Bin combinedBin;
+    if (bin1.getTargetSum() != null && bin2.getTargetSum() != null) {
+      double newTargetSum = bin1.getTargetSum() + bin2.getTargetSum();
+      combinedBin = new Bin(newMean, totalCount, newTargetSum);
+    } else {
+      combinedBin = new Bin(newMean, totalCount);
+    }
+    return combinedBin;
   }
 
   public Bin(double mean, double count) {
+    this(mean, count, null);
+  }
+
+  public Bin(double mean, double count, Double targetSum) {
     _mean = mean;
     _count = count;
+    _targetSum = targetSum;
   }
-  
+
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray jsonArray = new JSONArray();
     jsonArray.add(Double.valueOf(format.format(_mean)));
     jsonArray.add(Double.valueOf(format.format(_count)));
+    if (_targetSum != null) {
+      jsonArray.add(Double.valueOf(format.format(_targetSum)));
+    }
     return jsonArray;
   }
-  
+
   public void setCount(double count) {
     _count = count;
   }
@@ -34,6 +50,10 @@ public class Bin {
   public double getMean() {
     return _mean;
   }
+  
+  public Double getTargetSum() {
+    return _targetSum;
+  }
 
   public double getWeight() {
     return _mean * (double) _count;
@@ -43,7 +63,7 @@ public class Bin {
   public String toString() {
     return toJSON(Histogram.DEFAULT_DECIMAL_FORMAT).toJSONString();
   }
-  
   private final double _mean;
   private double _count;
+  private Double _targetSum;
 }
