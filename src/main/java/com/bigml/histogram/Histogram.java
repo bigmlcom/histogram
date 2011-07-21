@@ -31,42 +31,28 @@ import org.json.simple.parser.ParseException;
  */
 public class Histogram {
 
-  public static Histogram parseHistogramJSON(String jsonString) throws ParseException {
+  public static Histogram parseHistogramJSON(String jsonString) throws ParseException, MixedInsertException {
     JSONParser parser = new JSONParser();
     JSONArray binJSONArray = (JSONArray) parser.parse(jsonString);
     return parseHistogramJSON(binJSONArray);
   }
 
-  public static Histogram parseHistogramJSON(String jsonString, int maxBins) throws ParseException {
+  public static Histogram parseHistogramJSON(String jsonString, int maxBins) throws ParseException, MixedInsertException {
     JSONParser parser = new JSONParser();
     JSONArray binJSONArray = (JSONArray) parser.parse(jsonString);
     return parseHistogramJSON(binJSONArray, maxBins);
   }
 
-  public static Histogram parseHistogramJSON(JSONArray binJSONArray) {
+  public static Histogram parseHistogramJSON(JSONArray binJSONArray) throws MixedInsertException {
     return parseHistogramJSON(binJSONArray, binJSONArray.size());
   }
 
-  public static Histogram parseHistogramJSON(JSONArray binJSONArray, int maxBins) {
+  public static Histogram parseHistogramJSON(JSONArray binJSONArray, int maxBins) throws MixedInsertException {
     ArrayList<Bin> bins = parseBins(binJSONArray);
     Histogram histogram = new Histogram(maxBins, bins);
     return histogram;
   }
   public static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.#####");
-
-  public class SumOutOfRangeException extends Exception {
-
-    public SumOutOfRangeException(String string) {
-      super(string);
-    }
-  }
-
-  public class MixedInsertException extends Exception {
-
-    public MixedInsertException() {
-      super("Can't mix insert types");
-    }
-  }
 
   /**
    * Creates an empty Histogram with the defined number of bins
@@ -77,7 +63,7 @@ public class Histogram {
     _bins = new TreeMap<Double, Bin>();
     _gaps = new TreeSet<Gap>();
     _binsToGaps = new HashMap<Double, Gap>();
-    _isExtendedInsert = null;
+    _isExtendedHistogram = null;
   }
 
   /**
@@ -87,7 +73,7 @@ public class Histogram {
    * @param  maxBins  the maximum number of bins for this histogram
    * @param  bins  the initial bins for the histogram
    */
-  public Histogram(int maxBins, Collection<Bin> bins) {
+  public Histogram(int maxBins, Collection<Bin> bins) throws MixedInsertException {
     this(maxBins);
     for (Bin bin : bins) {
       insertBin(bin);
@@ -100,12 +86,6 @@ public class Histogram {
    * @param  p  the new point
    */
   public void insert(double point) throws MixedInsertException {
-    if (_isExtendedInsert == null) {
-      _isExtendedInsert = false;
-    } else if (_isExtendedInsert) {
-      throw new MixedInsertException();
-    }
-
     Bin newBin = new Bin(point, 1d);
     insertBin(newBin);
     mergeBins();
@@ -117,12 +97,6 @@ public class Histogram {
    * @param  target  the target value for the point
    */
   public void insert(double point, double target) throws MixedInsertException {
-    if (_isExtendedInsert == null) {
-      _isExtendedInsert = true;
-    } else if (!_isExtendedInsert) {
-      throw new MixedInsertException();
-    }
-
     Bin newBin = new Bin(point, 1d, target);
     insertBin(newBin);
     mergeBins();
@@ -155,12 +129,12 @@ public class Histogram {
       double totalCount = this.getTotalCount();
       double count = totalCount - (lastBin.getCount() / 2d);
 
-      Double totalTargetSum = this.getTotalTargetSum();
-      if (totalTargetSum == null) {
-        result = new SumResult(count, null);
-      } else {
+      if (_isExtendedHistogram) {
+        Double totalTargetSum = this.getTotalTargetSum();
         double targetSum = totalTargetSum - (lastBin.getTargetSum() / 2d);
         result = new SumResult(count, targetSum);
+      } else {
+        result = new SumResult(count, null);
       }
       return result;
     }
@@ -175,7 +149,7 @@ public class Histogram {
         break;
       }
       prevCount += bin.getCount();
-      if (bin.getTargetSum() != null) {
+      if (_isExtendedHistogram) {
         prevTargetSum += bin.getTargetSum();
       }
     }
@@ -190,7 +164,7 @@ public class Histogram {
             + (bin_i.getCount() / 2)
             + ((bin_i.getCount() + m_b) / 2) * bpRatio;
 
-    if (bin_i.getTargetSum() != null) {
+    if (_isExtendedHistogram) {
       double targetSum_m_b = bin_i.getTargetSum()
               + (((bin_i1.getTargetSum() - bin_i.getTargetSum()) / pDiff) * bDiff);
       double targetSum = prevTargetSum
@@ -208,8 +182,8 @@ public class Histogram {
    * Returns a list containing split points that form bins with uniform membership
    * @param  numberOfBins the desired number of uniform bins
    */
-  public ArrayList<Double> uniform(int numberOfBins) {
-    ArrayList<Double> uniformBinSplits = new ArrayList<Double>();
+  public double[] uniform(int numberOfBins) {
+    double[] uniformBinSplits = new double[numberOfBins - 1];
 
     TreeMap<Double, Bin> binSumMap = createBinSumMap();
     double totalCount = getTotalCount();
@@ -217,7 +191,7 @@ public class Histogram {
     for (int i = 1; i < numberOfBins; i++) {
       double targetSum = totalCount * ((double) i / (double) numberOfBins);
       double binSplit = findPointForSum(targetSum, binSumMap);
-      uniformBinSplits.add(binSplit);
+      uniformBinSplits[i - 1] = binSplit;
     }
 
     return uniformBinSplits;
@@ -227,8 +201,8 @@ public class Histogram {
    * Returns a list of bins that have a constant width (useful for visualization)
    * @param  numberOfBins the desired number of bins
    */
-  public ArrayList<Bin> createConstantWidthBins(int numberOfBins) {
-    ArrayList<Bin> bins = new ArrayList<Bin>();
+  public Bin[] createConstantWidthBins(int numberOfBins) {
+    Bin[] bins = new Bin[numberOfBins];
 
     try {
       double totalCount = getTotalCount();
@@ -245,7 +219,7 @@ public class Histogram {
         double endCount = sum(binEnd);
         double binCount = endCount - startCount;
         Bin newBin = new Bin(binCenter, binCount);
-        bins.add(newBin);
+        bins[i] = newBin;
 
         startCount = endCount;
         binCenter += increment;
@@ -253,8 +227,7 @@ public class Histogram {
 
       double lastBinCount = totalCount - startCount;
       Bin lastBin = new Bin(binCenter, lastBinCount);
-      bins.add(lastBin);
-
+      bins[numberOfBins - 1] = lastBin;
     } catch (SumOutOfRangeException ex) {
     }
 
@@ -265,7 +238,7 @@ public class Histogram {
    * Merges a histogram into the current histogram
    * @param  histogram the histogram to be merged
    */
-  public void mergeHistogram(Histogram histogram) {
+  public void mergeHistogram(Histogram histogram) throws MixedInsertException {
     for (Bin bin : histogram.getBins()) {
       insertBin(bin);
     }
@@ -284,18 +257,19 @@ public class Histogram {
   }
 
   /**
-   * Returns the total sum of the targets in the histogram
+   * Returns the total sum of the targets in the histogram, null if histogram has no targets
    */
   public Double getTotalTargetSum() {
-    Double targetSum = null;
-    for (Bin bin : _bins.values()) {
-      if (bin.getTargetSum() != null) {
-        if (targetSum == null) {
-          targetSum = 0d;
-        }
+    Double targetSum;
+    if (_isExtendedHistogram) {
+      targetSum = 0d;
+      for (Bin bin : _bins.values()) {
         targetSum += bin.getTargetSum();
       }
+    } else {
+      targetSum = null;
     }
+
     return targetSum;
   }
 
@@ -323,7 +297,13 @@ public class Histogram {
     return toJSONString(DEFAULT_DECIMAL_FORMAT);
   }
 
-  private void insertBin(Bin bin) {
+  private void insertBin(Bin bin) throws MixedInsertException {
+    if (_isExtendedHistogram == null) {
+      _isExtendedHistogram = bin.hasTarget();
+    } else if (_isExtendedHistogram != bin.hasTarget()) {
+      throw new MixedInsertException();
+    }
+
     Bin existingBin = _bins.get(bin.getMean());
     if (existingBin != null) {
       existingBin.setCount(existingBin.getCount() + bin.getCount());
@@ -399,7 +379,7 @@ public class Histogram {
     _gaps.add(newGap);
   }
 
-  private void mergeBins() {
+  private void mergeBins() throws MixedInsertException {
     while (_bins.size() > _maxBins) {
       Gap smallestGap = _gaps.pollFirst();
       Bin newBin = Bin.combine(smallestGap.getStartBin(), smallestGap.getEndBin());
@@ -465,5 +445,5 @@ public class Histogram {
   private final TreeMap<Double, Bin> _bins;
   private final TreeSet<Gap> _gaps;
   private final HashMap<Double, Gap> _binsToGaps;
-  private Boolean _isExtendedInsert;
+  private Boolean _isExtendedHistogram;
 }

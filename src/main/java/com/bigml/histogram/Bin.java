@@ -5,12 +5,14 @@ import org.json.simple.JSONArray;
 
 public class Bin {
 
-  public static Bin combine(Bin bin1, Bin bin2) {
+  public static Bin combine(Bin bin1, Bin bin2) throws MixedInsertException {
     double totalCount = bin1.getCount() + bin2.getCount();
     double newMean = (bin1.getWeight() + bin2.getWeight()) / (double) totalCount;
 
     Bin combinedBin;
-    if (bin1.getTargetSum() != null && bin2.getTargetSum() != null) {
+    if (bin1.hasTarget() ^ bin2.hasTarget()) {
+      throw new MixedInsertException();
+    } else if (bin1.hasTarget() && bin2.hasTarget()) {
       double newTargetSum = bin1.getTargetSum() + bin2.getTargetSum();
       combinedBin = new Bin(newMean, totalCount, newTargetSum);
     } else {
@@ -53,6 +55,10 @@ public class Bin {
   
   public Double getTargetSum() {
     return _targetSum;
+  }
+  
+  public boolean hasTarget() {
+    return _targetSum != null;
   }
 
   public double getWeight() {

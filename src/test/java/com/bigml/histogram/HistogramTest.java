@@ -1,7 +1,5 @@
 package com.bigml.histogram;
 
-import com.bigml.histogram.Histogram.MixedInsertException;
-import com.bigml.histogram.Histogram.SumOutOfRangeException;
 import java.util.ArrayList;
 import java.util.Random;
 import org.json.simple.parser.ParseException;
@@ -36,7 +34,7 @@ public class HistogramTest {
       hist.insert(random.nextGaussian());
     }
 
-    double split = hist.uniform(2).get(0);
+    double split = hist.uniform(2)[0];
     Assert.assertTrue(split > -0.01 && split < 0.01);
   }
 
@@ -123,7 +121,7 @@ public class HistogramTest {
     double bestSplit = Double.MAX_VALUE;
     double bestScore = Double.MAX_VALUE;
 
-    ArrayList<Double> candidateSplits = hist.uniform(candidateSplitSize);
+    double[] candidateSplits = hist.uniform(candidateSplitSize);
 
     for (double candidateSplit : candidateSplits) {
       SumResult result = hist.extendedSum(candidateSplit);
