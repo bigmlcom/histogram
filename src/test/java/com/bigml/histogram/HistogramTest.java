@@ -34,7 +34,7 @@ public class HistogramTest {
       hist.insert(random.nextGaussian());
     }
 
-    double split = hist.uniform(2)[0];
+    double split = hist.uniform(2).get(0);
     Assert.assertTrue(split > -0.01 && split < 0.01);
   }
 
@@ -121,7 +121,7 @@ public class HistogramTest {
     double bestSplit = Double.MAX_VALUE;
     double bestScore = Double.MAX_VALUE;
 
-    double[] candidateSplits = hist.uniform(candidateSplitSize);
+    ArrayList<Double> candidateSplits = hist.uniform(candidateSplitSize);
 
     for (double candidateSplit : candidateSplits) {
       SumResult result = hist.extendedSum(candidateSplit);

@@ -182,8 +182,8 @@ public class Histogram {
    * Returns a list containing split points that form bins with uniform membership
    * @param  numberOfBins the desired number of uniform bins
    */
-  public double[] uniform(int numberOfBins) {
-    double[] uniformBinSplits = new double[numberOfBins - 1];
+  public ArrayList<Double> uniform(int numberOfBins) {
+    ArrayList<Double> uniformBinSplits = new ArrayList<Double>();
 
     TreeMap<Double, Bin> binSumMap = createBinSumMap();
     double totalCount = getTotalCount();
@@ -191,7 +191,7 @@ public class Histogram {
     for (int i = 1; i < numberOfBins; i++) {
       double targetSum = totalCount * ((double) i / (double) numberOfBins);
       double binSplit = findPointForSum(targetSum, binSumMap);
-      uniformBinSplits[i - 1] = binSplit;
+      uniformBinSplits.add(binSplit);
     }
 
     return uniformBinSplits;
@@ -201,8 +201,8 @@ public class Histogram {
    * Returns a list of bins that have a constant width (useful for visualization)
    * @param  numberOfBins the desired number of bins
    */
-  public Bin[] createConstantWidthBins(int numberOfBins) {
-    Bin[] bins = new Bin[numberOfBins];
+  public ArrayList<Bin> createConstantWidthBins(int numberOfBins) {
+    ArrayList<Bin> bins = new ArrayList<Bin>();
 
     try {
       double totalCount = getTotalCount();
@@ -219,7 +219,7 @@ public class Histogram {
         double endCount = sum(binEnd);
         double binCount = endCount - startCount;
         Bin newBin = new Bin(binCenter, binCount);
-        bins[i] = newBin;
+        bins.add(newBin);
 
         startCount = endCount;
         binCenter += increment;
@@ -227,7 +227,7 @@ public class Histogram {
 
       double lastBinCount = totalCount - startCount;
       Bin lastBin = new Bin(binCenter, lastBinCount);
-      bins[numberOfBins - 1] = lastBin;
+      bins.add(lastBin);
     } catch (SumOutOfRangeException ex) {
     }
 
