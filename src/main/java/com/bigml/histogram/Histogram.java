@@ -188,8 +188,18 @@ public class Histogram {
     TreeMap<Double, Bin> binSumMap = createBinSumMap();
     double totalCount = getTotalCount();
 
-    for (int i = 1; i < numberOfBins; i++) {
-      double targetSum = totalCount * ((double) i / (double) numberOfBins);
+    double gapSize = totalCount / (double) numberOfBins;
+    double minGapSize = Math.max(_bins.firstEntry().getValue().getCount(),
+            _bins.lastEntry().getValue().getCount()) / 2;
+    
+    int splits = numberOfBins;
+    if (gapSize < minGapSize) {
+      splits = (int) (totalCount / minGapSize);
+      gapSize = totalCount / (double) splits;
+    }
+
+    for (int i = 1; i < splits; i++) {
+      double targetSum = (double) i * gapSize;
       double binSplit = findPointForSum(targetSum, binSumMap);
       uniformBinSplits.add(binSplit);
     }
@@ -332,7 +342,11 @@ public class Histogram {
     double p_i = bin_i.getMean();
     double m_i = bin_i.getCount();
 
-    double sumP_i1 = binSumMap.navigableKeySet().higher(sumP_i);
+    Double sumP_i1 = binSumMap.navigableKeySet().higher(sumP_i);
+    if (sumP_i1 == null) {
+      sumP_i1 = binSumMap.navigableKeySet().floor(sumP_i);
+    }
+    
     Bin bin_i1 = binSumMap.get(sumP_i1);
     double p_i1 = bin_i1.getMean();
     double m_i1 = bin_i1.getCount();
