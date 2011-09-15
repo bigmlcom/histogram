@@ -9,7 +9,7 @@ The histograms act as an approximation of the underlying dataset.  They can be u
 1. Install [maven](http://maven.apache.org/)
 2. Make sure you have Java 1.6
 3. Checkout the histogram project using Git
-4. Run 'mvn clean install'
+4. Run `mvn clean install`
 
 # Example
 
@@ -26,6 +26,7 @@ for (long i = 0; i < pointCount; i++) {
 //the sum at 0 should be about 50000
 double sum = hist.sum(0);
 
-//the split point between two uniform bins should be about 0
+//the split point between two uniform (by population) bins should be about 0
+//this is an approximate median
 double split = hist.uniform(2).get(0);
 ```
