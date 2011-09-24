@@ -10,7 +10,7 @@ public class Bin {
     double newMean = (bin1.getWeight() + bin2.getWeight()) / (double) totalCount;
 
     Bin combinedBin;
-    if (bin1.hasTarget() ^ bin2.hasTarget()) {
+    if (bin1.hasTarget() != bin2.hasTarget()) {
       throw new MixedInsertException();
     } else if (bin1.hasTarget() && bin2.hasTarget()) {
       double newTargetSum = bin1.getTargetSum() + bin2.getTargetSum();
@@ -21,6 +21,10 @@ public class Bin {
     return combinedBin;
   }
 
+  public Bin(Bin bin) {
+    this(bin.getMean(), bin.getCount(), bin.getTargetSum());
+  }
+  
   public Bin(double mean, double count) {
     this(mean, count, null);
   }
@@ -55,6 +59,10 @@ public class Bin {
   
   public Double getTargetSum() {
     return _targetSum;
+  }
+
+  public void setTargetSum(double targetSum) {
+    _targetSum = targetSum;
   }
   
   public boolean hasTarget() {

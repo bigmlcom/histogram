@@ -308,18 +308,23 @@ public class Histogram {
   }
 
   private void insertBin(Bin bin) throws MixedInsertException {
+    Bin newBin = new Bin(bin);
+    
     if (_isExtendedHistogram == null) {
-      _isExtendedHistogram = bin.hasTarget();
-    } else if (_isExtendedHistogram != bin.hasTarget()) {
+      _isExtendedHistogram = newBin.hasTarget();
+    } else if (_isExtendedHistogram != newBin.hasTarget()) {
       throw new MixedInsertException();
     }
 
-    Bin existingBin = _bins.get(bin.getMean());
+    Bin existingBin = _bins.get(newBin.getMean());
     if (existingBin != null) {
-      existingBin.setCount(existingBin.getCount() + bin.getCount());
+      existingBin.setCount(existingBin.getCount() + newBin.getCount());
+      if (existingBin.hasTarget()) {
+        existingBin.setTargetSum(existingBin.getTargetSum() + newBin.getTargetSum());
+      }
     } else {
-      updateGaps(bin);
-      _bins.put(bin.getMean(), bin);
+      updateGaps(newBin);
+      _bins.put(newBin.getMean(), newBin);
     }
   }
 
