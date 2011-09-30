@@ -1,7 +1,10 @@
 package com.bigml.histogram;
 
-public class SumResult {
-  public SumResult(double count, Double targetSum) {
+import java.text.DecimalFormat;
+import org.json.simple.JSONArray;
+
+public class SumResult<T extends Target> {
+  public SumResult(double count, T targetSum) {
     _count = count;
     _targetSum = targetSum;
   }
@@ -10,10 +13,22 @@ public class SumResult {
     return _count;
   }
   
-  public Double getTargetSum() {
+  public T getTargetSum() {
     return _targetSum;
   }
   
+  public JSONArray toJSON(DecimalFormat format) {
+    JSONArray jsonArray = new JSONArray();
+    jsonArray.add(Double.valueOf(format.format(_count)));
+    _targetSum.addJSON(jsonArray, format);
+    return jsonArray;
+  }
+  
+  @Override
+  public String toString() {
+    return toJSON(Histogram.DEFAULT_DECIMAL_FORMAT).toString();
+  }
+  
   private final double _count;
-  private final Double _targetSum;
+  private final T _targetSum;
 }

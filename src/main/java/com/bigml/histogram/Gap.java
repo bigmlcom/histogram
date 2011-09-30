@@ -1,18 +1,18 @@
 package com.bigml.histogram;
 
-public class Gap implements Comparable<Gap> {
+public class Gap<T extends Target> implements Comparable<Gap> {
 
-  public Gap(double space, Bin startBin, Bin endBin) {
+  public Gap(double space, Bin<T> startBin, Bin<T> endBin) {
     _space = space;
     _startBin = startBin;
     _endBin = endBin;
   }
 
-  public Bin getStartBin() {
+  public Bin<T> getStartBin() {
     return _startBin;
   }
   
-  public Bin getEndBin() {
+  public Bin<T> getEndBin() {
     return _endBin;
   }
 
@@ -52,6 +52,6 @@ public class Gap implements Comparable<Gap> {
   }
   
   private final double _space;
-  private final Bin _startBin;
-  private final Bin _endBin;
+  private final Bin<T> _startBin;
+  private final Bin<T> _endBin;
 }
