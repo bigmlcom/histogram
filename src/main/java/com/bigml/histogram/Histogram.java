@@ -60,9 +60,10 @@ public class Histogram<T extends Target> {
    * Inserts a new point into the histogram
    * @param  point  the new point
    */
-  public void insert(double point) throws MixedInsertException {
+  public Histogram<T> insert(double point) throws MixedInsertException {
     checkType(TargetType.none);
     insert(new Bin(point, 1, new SimpleTarget()));
+    return this;
   }
 
   /**
@@ -70,9 +71,10 @@ public class Histogram<T extends Target> {
    * @param  point  the new point
    * @param  target  the numeric target
    */
-  public void insert(double point, double target) throws MixedInsertException {
+  public Histogram<T> insert(double point, double target) throws MixedInsertException {
     checkType(TargetType.numeric);
     insert(new Bin(point, 1, new NumericTarget(target)));
+    return this;
   }
 
   /**
@@ -80,20 +82,29 @@ public class Histogram<T extends Target> {
    * @param  point  the new point
    * @param  target  the categorical target
    */
-  public void insert(double point, String target) throws MixedInsertException {
+  public Histogram<T> insert(double point, String target) throws MixedInsertException {
     checkType(TargetType.categorical);
     insert(new Bin(point, 1, new CategoricalTarget(target)));
+    return this;
   }
 
   /**
    * Inserts a new bin into the histogram
    * @param  bin  the new bin
    */
-  public void insert(Bin<T> bin) {
+  public Histogram<T> insert(Bin<T> bin) {
     insertBin(bin);
     mergeBins();
+    return this;
   }
 
+  /**
+   * Returns the target type for the histogram
+   */
+  public TargetType getTargetType() {
+    return _targetType;
+  }
+  
   /**
    * Returns the approximate number of points less than <code>p_b</code>
    * @param  p_b the sum point
@@ -193,7 +204,8 @@ public class Histogram<T extends Target> {
    * Merges a histogram into the current histogram
    * @param  histogram the histogram to be merged
    */
-  public void mergeHistogram(Histogram<T> histogram) {
+  public void mergeHistogram(Histogram<T> histogram) throws MixedInsertException {
+    checkType(histogram.getTargetType());
     for (Bin<T> bin : histogram.getBins()) {
       insertBin(bin);
     }
@@ -247,9 +259,9 @@ public class Histogram<T extends Target> {
   }
 
   private void checkType(TargetType newType) throws MixedInsertException {
-    if (_targetType == null) {
+    if (_targetType == null && newType != null) {
       _targetType = newType;
-    } else if (_targetType != newType) {
+    } else if (_targetType != newType || newType == null) {
       throw new MixedInsertException();
     }
   }
@@ -381,7 +393,7 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
-  private enum TargetType {none, numeric, categorical};
+  public enum TargetType {none, numeric, categorical};
   
   private TargetType _targetType;
   private final int _maxBins;
