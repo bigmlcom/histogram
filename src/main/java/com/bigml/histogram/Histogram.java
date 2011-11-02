@@ -89,6 +89,17 @@ public class Histogram<T extends Target> {
   }
 
   /**
+   * Inserts a new point with a categorical target into the histogram
+   * @param  point  the new point
+   * @param  target  the categorical target
+   */
+  public Histogram<T> insertCategorical(double point, Object target) throws MixedInsertException {
+    checkType(TargetType.categorical);
+    insert(new Bin(point, 1, new CategoricalTarget(target)));
+    return this;
+  }
+
+  /**
    * Inserts a new bin into the histogram
    * @param  bin  the new bin
    */

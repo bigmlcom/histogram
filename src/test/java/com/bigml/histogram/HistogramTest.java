@@ -156,7 +156,7 @@ public class HistogramTest {
     }
     
     CategoricalTarget target = (CategoricalTarget) hist.extendedSum(0).getTargetSum();
-    HashMap<String,Double> targetCounts = target.getTargetCounts();
+    HashMap<Object, Double> targetCounts = target.getTargetCounts();
     
     double apples = targetCounts.get("apple");
     double expectedApples = (double) points / 3d;
