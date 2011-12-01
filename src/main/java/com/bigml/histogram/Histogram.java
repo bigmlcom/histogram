@@ -27,9 +27,8 @@ import org.json.simple.JSONArray;
  * @author Adam Ashenfelter (ashenfelter@bigml.com)
  */
 public class Histogram<T extends Target> {
-
-  public static final DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.#####");
-
+  public static final String DEFAULT_FORMAT_STRING = "#.#####";
+  
   /**
    * Creates an empty Histogram with the defined number of bins
    * @param  maxBins  the maximum number of bins for this histogram
@@ -39,6 +38,7 @@ public class Histogram<T extends Target> {
     _bins = new TreeMap<Double, Bin<T>>();
     _gaps = new TreeSet<Gap<T>>();
     _binsToGaps = new HashMap<Double, Gap<T>>();
+    _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
   }
 
   /**
@@ -255,7 +255,7 @@ public class Histogram<T extends Target> {
 
   @Override
   public String toString() {
-    return toJSONString(DEFAULT_DECIMAL_FORMAT);
+    return toJSONString(_decimalFormat);
   }
 
   public T getTotalTargetSum() {
@@ -411,4 +411,6 @@ public class Histogram<T extends Target> {
   private final TreeMap<Double, Bin<T>> _bins;
   private final TreeSet<Gap<T>> _gaps;
   private final HashMap<Double, Gap<T>> _binsToGaps;
+  private final DecimalFormat _decimalFormat;
+
 }

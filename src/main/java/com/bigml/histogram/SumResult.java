@@ -26,7 +26,7 @@ public class SumResult<T extends Target> {
   
   @Override
   public String toString() {
-    return toJSON(Histogram.DEFAULT_DECIMAL_FORMAT).toString();
+    return toJSON(new DecimalFormat(Histogram.DEFAULT_FORMAT_STRING)).toString();
   }
   
   private final double _count;

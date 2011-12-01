@@ -46,7 +46,7 @@ public class Bin<T extends Target> {
 
   @Override
   public String toString() {
-    return toJSON(Histogram.DEFAULT_DECIMAL_FORMAT).toJSONString();
+    return toJSON(new DecimalFormat(Histogram.DEFAULT_FORMAT_STRING)).toJSONString();
   }
   
   public Bin combine(Bin<T> bin) {
