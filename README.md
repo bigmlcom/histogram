@@ -30,3 +30,7 @@ double sum = hist.sum(0);
 //this is an approximate median
 double split = hist.uniform(2).get(0);
 ```
+
+# Performance
+
+![timing chart](https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
