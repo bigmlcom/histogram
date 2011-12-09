@@ -10,28 +10,29 @@ import java.util.TreeSet;
 import org.json.simple.JSONArray;
 
 /**
- * Implements a Histogram as defined by the <a href="http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html">
- * Streaming Parallel Decision Tree (SPDT)</a> algorithm.
- * 
- * <p>The Histogram consumes numeric points and maintains a running approximation of the dataset using
- * the given number of bins.  The methods <code>insert</code>, <code>sum</code>, and 
- * <code>uniform</code> are described in detail in the SPDT paper.  The method 
- * <code>createConstantWidthBins</code> is a convenience method for transforming the histogram into
- * evenly sized bins for visualization.
- * 
- * <p>The histogram has an <code>insert</code> method which uses two parameters and an 
- * <code>extendedSum</code> method which add the capabilities described in
- * <a href="http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf">
- * Tyree's paper</a>.
- * 
+ * Implements a Histogram as defined by the <a
+ * href="http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html"> Streaming Parallel Decision Tree
+ * (SPDT)</a> algorithm.
+ *
+ * <p>The Histogram consumes numeric points and maintains a running approximation of the dataset
+ * using the given number of bins. The methods <code>insert</code>, <code>sum</code>, and
+ * <code>uniform</code> are described in detail in the SPDT paper.
+ *
+ * <p>The histogram has an <code>insert</code> method which uses two parameters and an
+ * <code>extendedSum</code> method which add the capabilities described in <a
+ * href="http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf"> Tyree's
+ * paper</a>. Along with Tyree's extension this histogram supports inserts with categorical targets.
+ *
  * @author Adam Ashenfelter (ashenfelter@bigml.com)
  */
 public class Histogram<T extends Target> {
+
   public static final String DEFAULT_FORMAT_STRING = "#.#####";
-  
+
   /**
    * Creates an empty Histogram with the defined number of bins
-   * @param  maxBins  the maximum number of bins for this histogram
+   *
+   * @param maxBins the maximum number of bins for this histogram
    */
   public Histogram(int maxBins) {
     _maxBins = maxBins;
@@ -42,11 +43,12 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Creates a Histogram initialized with the given <code>bins</code>.  If the initial number of 
+   * Creates a Histogram initialized with the given <code>bins</code>. If the initial number of
    * <code>bins</code> exceeds the <code>maxBins</code> then the bins are merged until the histogram
    * is valid.
-   * @param  maxBins  the maximum number of bins for this histogram
-   * @param  bins  the initial bins for the histogram
+   *
+   * @param maxBins the maximum number of bins for this histogram
+   * @param bins the initial bins for the histogram
    */
   public Histogram(int maxBins, Collection<Bin<T>> bins) throws MixedInsertException {
     this(maxBins);
@@ -58,7 +60,8 @@ public class Histogram<T extends Target> {
 
   /**
    * Inserts a new point into the histogram
-   * @param  point  the new point
+   *
+   * @param point the new point
    */
   public Histogram<T> insert(double point) throws MixedInsertException {
     checkType(TargetType.none);
@@ -68,8 +71,9 @@ public class Histogram<T extends Target> {
 
   /**
    * Inserts a new point with a numeric target into the histogram
-   * @param  point  the new point
-   * @param  target  the numeric target
+   *
+   * @param point the new point
+   * @param target the numeric target
    */
   public Histogram<T> insert(double point, double target) throws MixedInsertException {
     checkType(TargetType.numeric);
@@ -79,8 +83,9 @@ public class Histogram<T extends Target> {
 
   /**
    * Inserts a new point with a categorical target into the histogram
-   * @param  point  the new point
-   * @param  target  the categorical target
+   *
+   * @param point the new point
+   * @param target the categorical target
    */
   public Histogram<T> insert(double point, String target) throws MixedInsertException {
     checkType(TargetType.categorical);
@@ -90,8 +95,9 @@ public class Histogram<T extends Target> {
 
   /**
    * Inserts a new point with a categorical target into the histogram
-   * @param  point  the new point
-   * @param  target  the categorical target
+   *
+   * @param point the new point
+   * @param target the categorical target
    */
   public Histogram<T> insertCategorical(double point, Object target) throws MixedInsertException {
     checkType(TargetType.categorical);
@@ -101,7 +107,8 @@ public class Histogram<T extends Target> {
 
   /**
    * Inserts a new bin into the histogram
-   * @param  bin  the new bin
+   *
+   * @param bin the new bin
    */
   public Histogram<T> insert(Bin<T> bin) {
     insertBin(bin);
@@ -115,10 +122,11 @@ public class Histogram<T extends Target> {
   public TargetType getTargetType() {
     return _targetType;
   }
-  
+
   /**
    * Returns the approximate number of points less than <code>p_b</code>
-   * @param  p_b the sum point
+   *
+   * @param p_b the sum point
    */
   public double sum(double p_b) throws SumOutOfRangeException {
     return extendedSum(p_b).getCount();
@@ -127,7 +135,8 @@ public class Histogram<T extends Target> {
   /**
    * Returns a <code>SumResult</code> object which contains the approximate number of points less
    * than <code>p_b</code> along with the sum of their targets.
-   * @param  p_b the sum point
+   *
+   * @param p_b the sum point
    */
   public SumResult<T> extendedSum(double p_b) throws SumOutOfRangeException {
     SumResult<T> result = null;
@@ -143,48 +152,48 @@ public class Histogram<T extends Target> {
       double totalCount = this.getTotalCount();
       double count = totalCount - (lastBin.getCount() / 2d);
 
-      T targetSum = (T) getTotalTargetSum().subtractUpdate(lastBin.getTarget().clone().multiplyUpdate(0.5d));
+      T targetSum = (T) getTotalTargetSum()
+              .subtractUpdate(lastBin.getTarget().clone().multiplyUpdate(0.5d));
       result = new SumResult<T>(count, targetSum);
+    } else {
+      Bin<T> bin_i = _bins.floorEntry(p_b).getValue();
+      Bin<T> bin_i1 = _bins.higherEntry(p_b).getValue();
 
-      return result;
-    }
+      double prevCount = 0;
+      T prevTargetSum = (T) _bins.firstEntry().getValue().getTarget().init();
 
-    Bin<T> bin_i = _bins.floorEntry(p_b).getValue();
-    Bin<T> bin_i1 = _bins.higherEntry(p_b).getValue();
-
-    double prevCount = 0;
-    T prevTargetSum = (T) _bins.firstEntry().getValue().getTarget().init();
-
-    for (Bin<T> bin : _bins.values()) {
-      if (bin.equals(bin_i)) {
-        break;
+      for (Bin<T> bin : _bins.values()) {
+        if (bin.equals(bin_i)) {
+          break;
+        }
+        prevCount += bin.getCount();
+        prevTargetSum.sumUpdate(bin.getTarget());
       }
-      prevCount += bin.getCount();
-      prevTargetSum.sumUpdate(bin.getTarget());
+
+      double bDiff = p_b - bin_i.getMean();
+      double pDiff = bin_i1.getMean() - bin_i.getMean();
+      double bpRatio = bDiff / pDiff;
+      double m_b = bin_i.getCount() + (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
+
+      double countSum = prevCount
+              + (bin_i.getCount() / 2)
+              + ((bin_i.getCount() + m_b) / 2) * bpRatio;
+
+      T targetSum_m_b = (T) bin_i1.getTarget().clone().subtractUpdate(bin_i.getTarget())
+              .multiplyUpdate(bDiff / pDiff).sumUpdate(bin_i.getTarget());
+      T targetSum = (T) prevTargetSum.sumUpdate(bin_i.getTarget().clone().multiplyUpdate(0.5))
+              .sumUpdate(targetSum_m_b.sumUpdate(bin_i.getTarget()).multiplyUpdate(bpRatio / 2d));
+
+      result = new SumResult<T>(countSum, targetSum);
     }
-
-    double bDiff = p_b - bin_i.getMean();
-    double pDiff = bin_i1.getMean() - bin_i.getMean();
-    double bpRatio = bDiff / pDiff;
-    double m_b = bin_i.getCount() + (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
-
-    double countSum = prevCount
-            + (bin_i.getCount() / 2)
-            + ((bin_i.getCount() + m_b) / 2) * bpRatio;
-
-    T targetSum_m_b = (T) bin_i1.getTarget().clone().subtractUpdate(bin_i.getTarget())
-            .multiplyUpdate(bDiff / pDiff).sumUpdate(bin_i.getTarget());
-    T targetSum = (T) prevTargetSum.sumUpdate(bin_i.getTarget().clone().multiplyUpdate(0.5))
-            .sumUpdate(targetSum_m_b.sumUpdate(bin_i.getTarget()).multiplyUpdate(bpRatio / 2d));
-
-    result = new SumResult<T>(countSum, targetSum);
 
     return result;
   }
 
   /**
    * Returns a list containing split points that form bins with uniform membership
-   * @param  numberOfBins the desired number of uniform bins
+   *
+   * @param numberOfBins the desired number of uniform bins
    */
   public ArrayList<Double> uniform(int numberOfBins) {
     ArrayList<Double> uniformBinSplits = new ArrayList<Double>();
@@ -213,7 +222,8 @@ public class Histogram<T extends Target> {
 
   /**
    * Merges a histogram into the current histogram
-   * @param  histogram the histogram to be merged
+   *
+   * @param histogram the histogram to be merged
    */
   public void mergeHistogram(Histogram<T> histogram) throws MixedInsertException {
     checkType(histogram.getTargetType());
@@ -395,7 +405,9 @@ public class Histogram<T extends Target> {
     return resultRoot;
   }
 
-  /* Simple quadratic solver - doesn't handle edge cases */
+  /*
+   * Simple quadratic solver - doesn't handle edge cases
+   */
   private static ArrayList<Double> solveQuadratic(double a, double b, double c) {
     double discriminantSquareRoot = Math.sqrt(Math.pow(b, 2) - (4 * a * c));
     ArrayList<Double> roots = new ArrayList<Double>();
@@ -405,12 +417,11 @@ public class Histogram<T extends Target> {
   }
 
   public enum TargetType {none, numeric, categorical};
-  
+
   private TargetType _targetType;
   private final int _maxBins;
   private final TreeMap<Double, Bin<T>> _bins;
   private final TreeSet<Gap<T>> _gaps;
   private final HashMap<Double, Gap<T>> _binsToGaps;
   private final DecimalFormat _decimalFormat;
-
 }
