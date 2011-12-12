@@ -11,17 +11,19 @@ import org.json.simple.JSONArray;
 
 /**
  * Implements a Histogram as defined by the <a
- * href="http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html"> Streaming Parallel Decision Tree
- * (SPDT)</a> algorithm.
- *
- * <p>The Histogram consumes numeric points and maintains a running approximation of the dataset
- * using the given number of bins. The methods <code>insert</code>, <code>sum</code>, and
+ * href="http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html">
+ * Streaming Parallel Decision Tree (SPDT)</a> algorithm.  <p>The
+ * Histogram consumes numeric points and maintains a running
+ * approximation of the dataset using the given number of bins. The
+ * methods <code>insert</code>, <code>sum</code>, and
  * <code>uniform</code> are described in detail in the SPDT paper.
  *
- * <p>The histogram has an <code>insert</code> method which uses two parameters and an
- * <code>extendedSum</code> method which add the capabilities described in <a
- * href="http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf"> Tyree's
- * paper</a>. Along with Tyree's extension this histogram supports inserts with categorical targets.
+ * <p>The histogram has an <code>insert</code> method which uses two
+ * parameters and an <code>extendedSum</code> method which add the
+ * capabilities described in <a
+ * href="http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf">
+ * Tyree's paper</a>. Along with Tyree's extension this histogram
+ * supports inserts with categorical targets.
  *
  * @author Adam Ashenfelter (ashenfelter@bigml.com)
  */
@@ -43,9 +45,10 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Creates a Histogram initialized with the given <code>bins</code>. If the initial number of
-   * <code>bins</code> exceeds the <code>maxBins</code> then the bins are merged until the histogram
-   * is valid.
+   * Creates a Histogram initialized with the given
+   * <code>bins</code>. If the initial number of <code>bins</code>
+   * exceeds the <code>maxBins</code> then the bins are merged until
+   * the histogram is valid.
    *
    * @param maxBins the maximum number of bins for this histogram
    * @param bins the initial bins for the histogram
@@ -99,7 +102,8 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the categorical target
    */
-  public Histogram<T> insertCategorical(double point, Object target) throws MixedInsertException {
+  public Histogram<T> insertCategorical(double point, Object target)
+      throws MixedInsertException {
     checkType(TargetType.categorical);
     insert(new Bin(point, 1, new CategoricalTarget(target)));
     return this;
@@ -133,8 +137,9 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Returns a <code>SumResult</code> object which contains the approximate number of points less
-   * than <code>p_b</code> along with the sum of their targets.
+   * Returns a <code>SumResult</code> object which contains the
+   * approximate number of points less than <code>p_b</code> along
+   * with the sum of their targets.
    *
    * @param p_b the sum point
    */
@@ -145,7 +150,8 @@ public class Histogram<T extends Target> {
     double max = _bins.lastKey();
 
     if (p_b < min || p_b > max) {
-      throw new SumOutOfRangeException("Sum point " + p_b + " should be between " + min + " and " + max);
+      throw new SumOutOfRangeException("Sum point " + p_b + " should be between "
+                                       + min + " and " + max);
     } else if (p_b == max) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
@@ -173,7 +179,8 @@ public class Histogram<T extends Target> {
       double bDiff = p_b - bin_i.getMean();
       double pDiff = bin_i1.getMean() - bin_i.getMean();
       double bpRatio = bDiff / pDiff;
-      double m_b = bin_i.getCount() + (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
+      double m_b = bin_i.getCount() +
+          (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
 
       double countSum = prevCount
               + (bin_i.getCount() / 2)
@@ -181,8 +188,9 @@ public class Histogram<T extends Target> {
 
       T targetSum_m_b = (T) bin_i1.getTarget().clone().subtractUpdate(bin_i.getTarget())
               .multiplyUpdate(bDiff / pDiff).sumUpdate(bin_i.getTarget());
-      T targetSum = (T) prevTargetSum.sumUpdate(bin_i.getTarget().clone().multiplyUpdate(0.5))
-              .sumUpdate(targetSum_m_b.sumUpdate(bin_i.getTarget()).multiplyUpdate(bpRatio / 2d));
+      T targetSum = (T) prevTargetSum.sumUpdate(bin_i.getTarget().clone()
+              .multiplyUpdate(0.5)).sumUpdate(targetSum_m_b.sumUpdate(bin_i.getTarget())
+              .multiplyUpdate(bpRatio / 2d));
 
       result = new SumResult<T>(countSum, targetSum);
     }
@@ -191,7 +199,8 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Returns a list containing split points that form bins with uniform membership
+   * Returns a list containing split points that form bins with
+   * uniform membership
    *
    * @param numberOfBins the desired number of uniform bins
    */
