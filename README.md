@@ -1,8 +1,20 @@
 # About
 
-This project is an implementation of the streaming, one-pass histograms described in Ben-Haim's [Streaming Parallel Decision Trees](http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html). It also includes the extensions added by Tyree's [Parallel Boosted Regression Trees](http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf).
+This project is an implementation of the streaming, one-pass
+histograms described in Ben-Haim's [Streaming Parallel Decision
+Trees](http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html). The
+histogram includes the extension added by Tyree's [Parallel Boosted
+Regression Trees]
+(http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf)
+which allows the histogram to include numeric targets (useful for
+regression trees). The histogram follows a similar approach to support
+categorical targets (useful for classification trees).
 
-The histograms act as an approximation of the underlying dataset.  They can be used for visualization, discretization, or analysis.  This includes finding the median or any other percentile in one pass.  The histograms may be built independently and combined, making them a good fit for map-reduce algorithms.
+The histograms act as an approximation of the underlying dataset.
+They can be used for learning, visualization, discretization, or
+analysis.  This includes finding the median or any other percentile in
+one pass.  The histograms may be built independently and merged,
+convenient for parallel and distributed algorithms.
 
 # Building
 
@@ -31,6 +43,12 @@ double sum = hist.sum(0);
 double split = hist.uniform(2).get(0);
 ```
 
-# Performance
+The `extendedSum` method is available for histograms that include
+categorical or numeric targets.  Examples for the extended histograms
+may be found in the test `com.bigml.histogram.HistogramTest.java`.
 
-![timing chart](https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
+# Performance Scales `log(n)` with respect to the number of bins in
+the histogram.
+
+![timing chart]
+(https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
