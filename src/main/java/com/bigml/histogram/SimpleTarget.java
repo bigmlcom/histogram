@@ -7,7 +7,6 @@ public class SimpleTarget extends Target<SimpleTarget> {
 
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
-    return;
   }
 
   @Override
