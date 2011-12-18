@@ -97,6 +97,18 @@ public class Histogram<T extends Target> {
   }
 
   /**
+   * Inserts a new point with a group of targets into the histogram
+   *
+   * @param point the new point
+   * @param target the group targets
+   */
+  public Histogram<T> insert(double point, Collection<Object> group) throws MixedInsertException {
+    checkType(TargetType.group);
+    insert(new Bin(point, 1, new GroupTarget(group)));
+    return this;
+  }  
+
+  /**
    * Inserts a new point with a categorical target into the histogram
    *
    * @param point the new point
@@ -106,6 +118,19 @@ public class Histogram<T extends Target> {
       throws MixedInsertException {
     checkType(TargetType.categorical);
     insert(new Bin(point, 1, new CategoricalTarget(target)));
+    return this;
+  }
+
+  /**
+   * Inserts a new point with a group of targets into the histogram
+   *
+   * @param point the new point
+   * @param target the categorical target
+   */
+  public Histogram<T> insertGroup(double point, ArrayList<Target> group)
+      throws MixedInsertException {
+    checkType(TargetType.group);
+    insert(new Bin(point, 1, new GroupTarget(group)));
     return this;
   }
 
@@ -194,7 +219,7 @@ public class Histogram<T extends Target> {
 
       result = new SumResult<T>(countSum, targetSum);
     }
-
+    
     return result;
   }
 
@@ -206,26 +231,27 @@ public class Histogram<T extends Target> {
    */
   public ArrayList<Double> uniform(int numberOfBins) {
     ArrayList<Double> uniformBinSplits = new ArrayList<Double>();
-
-    TreeMap<Double, Bin<T>> binSumMap = createBinSumMap();
     double totalCount = getTotalCount();
+    
+    if (totalCount > 0) {
+      TreeMap<Double, Bin<T>> binSumMap = createBinSumMap();
+      
+      double gapSize = totalCount / (double) numberOfBins;
+      double minGapSize = Math.max(_bins.firstEntry().getValue().getCount(),
+              _bins.lastEntry().getValue().getCount()) / 2;
+    
+      int splits = numberOfBins;
+      if (gapSize < minGapSize) {
+        splits = (int) (totalCount / minGapSize);
+        gapSize = totalCount / (double) splits;
+      }
 
-    double gapSize = totalCount / (double) numberOfBins;
-    double minGapSize = Math.max(_bins.firstEntry().getValue().getCount(),
-            _bins.lastEntry().getValue().getCount()) / 2;
-
-    int splits = numberOfBins;
-    if (gapSize < minGapSize) {
-      splits = (int) (totalCount / minGapSize);
-      gapSize = totalCount / (double) splits;
+      for (int i = 1; i < splits; i++) {
+        double targetSum = (double) i * gapSize;
+        double binSplit = findPointForSum(targetSum, binSumMap);
+        uniformBinSplits.add(binSplit);
+      }
     }
-
-    for (int i = 1; i < splits; i++) {
-      double targetSum = (double) i * gapSize;
-      double binSplit = findPointForSum(targetSum, binSumMap);
-      uniformBinSplits.add(binSplit);
-    }
-
     return uniformBinSplits;
   }
 
@@ -425,7 +451,7 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
-  public enum TargetType {none, numeric, categorical};
+  public enum TargetType {none, numeric, categorical, group};
 
   private TargetType _targetType;
   private final int _maxBins;

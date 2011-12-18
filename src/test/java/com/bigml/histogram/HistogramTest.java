@@ -168,4 +168,51 @@ public class HistogramTest {
 
     Assert.assertNull(targetCounts.get("grape"));
   }
+  
+  @Test
+  public void groupTest() throws MixedInsertException, SumOutOfRangeException {
+    int points = 100000;
+    Random random = new Random(0);
+
+    Histogram hist = new Histogram(100);
+    
+    for (int i = 0; i < points; i++) {
+      double point = random.nextDouble();
+      
+      ArrayList targets = new ArrayList();
+      double t1 = random.nextDouble();
+      targets.add(t1);
+
+      String t2;
+      if (point < 0.333) {
+        t2 = "apple";
+      } else if (point < 0.666) {
+        t2 = "pear";
+      } else {
+        t2 = "grape";
+      }
+      targets.add(t2);
+      
+      hist.insert(point, targets);
+    }
+    
+    GroupTarget groupSum = (GroupTarget) hist.extendedSum(0.5).getTargetSum();
+    NumericTarget t1Sum = (NumericTarget) groupSum.getGroupTarget().get(0);
+    CategoricalTarget t2Sum = (CategoricalTarget) groupSum.getGroupTarget().get(1);
+    
+    
+    double apples = t2Sum.getTargetCounts().get("apple");
+    double expectedApples = (double) points / 3d;
+    Assert.assertTrue(Math.abs(apples - expectedApples) < 0.02 * expectedApples);
+
+    double pears = t2Sum.getTargetCounts().get("pear");
+    double expectedPears = (double) points / 6d;
+    Assert.assertTrue(Math.abs(pears - expectedPears) < 0.02 * expectedPears);
+    
+    Assert.assertFalse(t2Sum.getTargetCounts().containsKey("grape"));
+
+    double t1Expected = points / 4;
+    double t1Actual = t1Sum.getTarget();
+    Assert.assertTrue(Math.abs(t1Expected - t1Actual) < 0.02 * t1Expected);
+  }
 }
