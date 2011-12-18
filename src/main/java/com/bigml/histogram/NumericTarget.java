@@ -8,7 +8,11 @@ public class NumericTarget extends Target<NumericTarget> {
   public NumericTarget(double target) {
     _target = target;
   }
-  
+
+  public NumericTarget(Number target) {
+    _target = target.doubleValue();
+  }
+
   public double getTarget() {
     return _target;
   }
