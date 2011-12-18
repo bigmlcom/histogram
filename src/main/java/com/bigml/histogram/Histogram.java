@@ -85,6 +85,16 @@ public class Histogram<T extends Target> {
   }
 
   /**
+   * Inserts a new point with a numeric target into the histogram
+   *
+   * @param point the new point
+   * @param target the numeric target
+   */
+  public Histogram<T> insert(double point, Number target) throws MixedInsertException {
+    return insert(point, target.doubleValue());
+  }
+
+  /**
    * Inserts a new point with a categorical target into the histogram
    *
    * @param point the new point
