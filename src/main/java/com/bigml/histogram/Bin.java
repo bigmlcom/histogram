@@ -10,6 +10,10 @@ public class Bin<T extends Target> {
     _count = count;
     _target = target;
   }
+  
+  public Bin(Bin<T> bin) {
+    this(bin.getMean(), bin.getCount(), (T) bin.getTarget().clone());
+  }
 
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray binJSON = new JSONArray();

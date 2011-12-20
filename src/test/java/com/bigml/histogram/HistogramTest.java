@@ -60,6 +60,10 @@ public class HistogramTest {
 
     double lessThanZeroSum = hist1.sum(0);
     Assert.assertTrue((lessThanZeroSum > 149000 && lessThanZeroSum < 151000));
+    
+    Histogram emptyHist = new Histogram(10);
+    emptyHist.mergeHistogram(new Histogram(10));
+    Assert.assertTrue(emptyHist.getBins().isEmpty());
   }
   
   @Test
