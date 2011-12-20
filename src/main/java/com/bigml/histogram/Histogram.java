@@ -263,7 +263,7 @@ public class Histogram<T extends Target> {
   public void mergeHistogram(Histogram<T> histogram) throws MixedInsertException {
     checkType(histogram.getTargetType());
     for (Bin<T> bin : histogram.getBins()) {
-      insertBin(bin);
+      insertBin(new Bin<T>(bin));
     }
     mergeBins();
   }
@@ -315,7 +315,7 @@ public class Histogram<T extends Target> {
   }
 
   private void checkType(TargetType newType) throws MixedInsertException {
-    if (_targetType == null && newType != null) {
+    if (_targetType == null) {
       _targetType = newType;
     } else if (_targetType != newType || newType == null) {
       throw new MixedInsertException();
