@@ -54,8 +54,8 @@ public class HistogramTest {
       hist3.insert(random.nextGaussian());
     }
 
-    hist1.mergeHistogram(hist2);
-    hist1.mergeHistogram(hist3);
+    hist1.merge(hist2);
+    hist1.merge(hist3);
     Assert.assertTrue(hist1.getBins().size() == histogramBins);
 
     double lessThanZeroSum = hist1.sum(0);
@@ -63,17 +63,17 @@ public class HistogramTest {
     
     // Merge empty into empty
     Histogram hist = new Histogram(10);
-    hist.mergeHistogram(new Histogram(10));
+    hist.merge(new Histogram(10));
     Assert.assertTrue(hist.getBins().isEmpty());
     
     //Merge non-empty into empty
     hist = new Histogram(10);
-    hist.mergeHistogram(new Histogram(10).insert(1.0));
+    hist.merge(new Histogram(10).insert(1.0));
     Assert.assertTrue(!hist.getBins().isEmpty());
     
     //Merge empty into non-empty
     hist = new Histogram(10).insert(1.0);
-    hist.mergeHistogram(new Histogram(10));
+    hist.merge(new Histogram(10));
     Assert.assertTrue(!hist.getBins().isEmpty());
   }
   

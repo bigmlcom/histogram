@@ -260,7 +260,7 @@ public class Histogram<T extends Target> {
    *
    * @param histogram the histogram to be merged
    */
-  public Histogram mergeHistogram(Histogram<T> histogram) throws MixedInsertException {
+  public Histogram merge(Histogram<T> histogram) throws MixedInsertException {
     if (!histogram.getBins().isEmpty()) {
       checkType(histogram.getTargetType());
       for (Bin<T> bin : histogram.getBins()) {
