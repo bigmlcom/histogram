@@ -21,12 +21,6 @@ public class NumericTarget extends Target<NumericTarget> {
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     binJSON.add(Double.valueOf(format.format(_target)));
   }
-
-  @Override
-  protected NumericTarget combine(NumericTarget target) {
-    double sum = getTarget() + target.getTarget();
-    return new NumericTarget(sum);
-  }
   
   @Override
   protected NumericTarget init() {

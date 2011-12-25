@@ -9,11 +9,6 @@ public class SimpleTarget extends Target<SimpleTarget> {
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
   }
-
-  @Override
-  protected SimpleTarget combine(SimpleTarget target) {
-    return this;
-  }
   
   @Override
   protected SimpleTarget init() {

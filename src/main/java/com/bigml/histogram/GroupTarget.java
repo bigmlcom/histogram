@@ -39,15 +39,6 @@ public class GroupTarget extends Target<GroupTarget> {
   }
   
   @Override
-  protected GroupTarget combine(GroupTarget group) {
-    ArrayList<Target> newGroup = new ArrayList<Target>();
-    for (int i = 0; i < _target.size(); i++) {
-      newGroup.add(_target.get(i).combine(group.getGroupTarget().get(i)));
-    }
-    return new GroupTarget(newGroup);
-  }
-
-  @Override
   protected GroupTarget sumUpdate(GroupTarget group) {
     for (int i = 0; i < _target.size(); i++) {
       _target.get(i).sumUpdate(group.getGroupTarget().get(i));

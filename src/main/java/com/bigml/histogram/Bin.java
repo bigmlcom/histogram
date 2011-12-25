@@ -56,8 +56,10 @@ public class Bin<T extends Target> {
   public Bin combine(Bin<T> bin) {
     double count = getCount() + bin.getCount();
     double mean = (getWeight() + bin.getWeight()) / (double) count;
-    T target = (T) _target.combine(bin.getTarget());
-    return new Bin<T>(mean, count, target);
+    T newTarget = (T) _target.init();
+    newTarget.sumUpdate(_target);
+    newTarget.sumUpdate(bin.getTarget());
+    return new Bin<T>(mean, count, newTarget);
   }
     
   private T _target;

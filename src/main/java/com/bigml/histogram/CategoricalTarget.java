@@ -34,29 +34,6 @@ public class CategoricalTarget extends Target<CategoricalTarget> {
   }
 
   @Override
-  protected CategoricalTarget combine(CategoricalTarget target) {
-    HashMap<Object, Double> counts1 = getTargetCounts();
-    HashMap<Object, Double> counts2 = target.getTargetCounts();
-    
-    HashSet<Object> categories = new HashSet<Object>();
-    categories.addAll(counts1.keySet());
-    categories.addAll(counts2.keySet());
-    
-    HashMap<Object, Double> newTargetCounts = new HashMap<Object, Double>();
-    for (Object category : categories) {
-      Double count1 = counts1.get(category);
-      count1 = (count1 == null) ? 0 : count1;
-      
-      Double count2 = counts2.get(category);
-      count2 = (count2 == null) ? 0 : count2;
-      
-      newTargetCounts.put(category, count1 + count2);
-    }
-    
-    return new CategoricalTarget(newTargetCounts);
-  }
-
-  @Override
   protected CategoricalTarget sumUpdate(CategoricalTarget target) {
     for (Entry<Object, Double> categoryCount : target.getTargetCounts().entrySet()) {
       Object category = categoryCount.getKey();
