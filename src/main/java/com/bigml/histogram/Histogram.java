@@ -68,7 +68,7 @@ public class Histogram<T extends Target> {
    */
   public Histogram<T> insert(double point) throws MixedInsertException {
     checkType(TargetType.none);
-    insert(new Bin(point, 1, new SimpleTarget()));
+    insert(new Bin(point, 1, SimpleTarget.TARGET));
     return this;
   }
 

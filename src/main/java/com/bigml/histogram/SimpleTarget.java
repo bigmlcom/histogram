@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
 public class SimpleTarget extends Target<SimpleTarget> {
+  public static final SimpleTarget TARGET = new SimpleTarget();
 
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
@@ -11,17 +12,17 @@ public class SimpleTarget extends Target<SimpleTarget> {
 
   @Override
   protected SimpleTarget combine(SimpleTarget target) {
-    return target;
+    return this;
   }
   
   @Override
   protected SimpleTarget init() {
-    return new SimpleTarget();
+    return this;
   }
   
   @Override
   protected SimpleTarget clone() {
-    return new SimpleTarget();
+    return this;
   }
   
   @Override
@@ -38,4 +39,6 @@ public class SimpleTarget extends Target<SimpleTarget> {
   protected SimpleTarget multiplyUpdate(double multiplier) {
     return this;
   }
+  
+  private SimpleTarget() {}
 }
