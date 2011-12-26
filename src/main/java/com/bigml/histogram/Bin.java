@@ -45,7 +45,7 @@ public class Bin<T extends Target> {
     }
     
     _count += bin.getCount();
-    _target.sumUpdate(bin.getTarget());
+    _target.sum(bin.getTarget());
   }
 
   @Override
@@ -57,8 +57,8 @@ public class Bin<T extends Target> {
     double count = getCount() + bin.getCount();
     double mean = (getWeight() + bin.getWeight()) / (double) count;
     T newTarget = (T) _target.init();
-    newTarget.sumUpdate(_target);
-    newTarget.sumUpdate(bin.getTarget());
+    newTarget.sum(_target);
+    newTarget.sum(bin.getTarget());
     return new Bin<T>(mean, count, newTarget);
   }
 

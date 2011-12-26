@@ -39,25 +39,17 @@ public class GroupTarget extends Target<GroupTarget> {
   }
   
   @Override
-  protected GroupTarget sumUpdate(GroupTarget group) {
+  protected GroupTarget sum(GroupTarget group) {
     for (int i = 0; i < _target.size(); i++) {
-      _target.get(i).sumUpdate(group.getGroupTarget().get(i));
+      _target.get(i).sum(group.getGroupTarget().get(i));
     }
     return this;
   }
 
   @Override
-  protected GroupTarget subtractUpdate(GroupTarget group) {
-    for (int i = 0; i < _target.size(); i++) {
-      _target.get(i).subtractUpdate(group.getGroupTarget().get(i));
-    }
-    return this;
-  }
-
-  @Override
-  protected GroupTarget multiplyUpdate(double multiplier) {
+  protected GroupTarget mult(double multiplier) {
     for (Target target : _target) {
-      target.multiplyUpdate(multiplier);
+      target.mult(multiplier);
     }    
     return this;
   }

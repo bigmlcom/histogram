@@ -12,7 +12,7 @@ import org.json.simple.JSONArray;
 /**
  * Implements a Histogram as defined by the <a
  * href="http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html">
- * Streaming Parallel Decision Tree (SPDT)</a> algorithm.  <p>The
+ * Streaming Parallel Decision Tree (SPDT)</a> algorithm. <p>The
  * Histogram consumes numeric points and maintains a running
  * approximation of the dataset using the given number of bins. The
  * methods <code>insert</code>, <code>sum</code>, and
@@ -106,7 +106,7 @@ public class Histogram<T extends Target> {
     checkType(TargetType.group);
     insert(new Bin(point, 1, new GroupTarget(group)));
     return this;
-  }  
+  }
 
   /**
    * Inserts a new point with a categorical target into the histogram
@@ -115,7 +115,7 @@ public class Histogram<T extends Target> {
    * @param target the categorical target
    */
   public Histogram<T> insertCategorical(double point, Object target)
-      throws MixedInsertException {
+          throws MixedInsertException {
     checkType(TargetType.categorical);
     insert(new Bin(point, 1, new CategoricalTarget(target)));
     return this;
@@ -128,7 +128,7 @@ public class Histogram<T extends Target> {
    * @param target the categorical target
    */
   public Histogram<T> insertGroup(double point, ArrayList<Target> group)
-      throws MixedInsertException {
+          throws MixedInsertException {
     checkType(TargetType.group);
     insert(new Bin(point, 1, new GroupTarget(group)));
     return this;
@@ -153,7 +153,8 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Returns the approximate number of points less than <code>p_b</code>
+   * Returns the approximate number of points less than
+   * <code>p_b</code>
    *
    * @param p_b the sum point
    */
@@ -176,15 +177,19 @@ public class Histogram<T extends Target> {
 
     if (p_b < min || p_b > max) {
       throw new SumOutOfRangeException("Sum point " + p_b + " should be between "
-                                       + min + " and " + max);
+              + min + " and " + max);
     } else if (p_b == max) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
       double totalCount = this.getTotalCount();
       double count = totalCount - (lastBin.getCount() / 2d);
 
-      T targetSum = (T) getTotalTargetSum()
-              .subtractUpdate(lastBin.getTarget().clone().multiplyUpdate(0.5d));
+      T targetSum = (T) lastBin.getTarget().clone().mult(0.5d);
+      Entry<Double, Bin<T>> prevEntry = _bins.lowerEntry(lastBin.getMean());
+      if (prevEntry != null) {
+        targetSum.sum(prevEntry.getValue().getTarget());
+      }
+
       result = new SumResult<T>(count, targetSum);
     } else {
       Bin<T> bin_i = _bins.floorEntry(p_b).getValue();
@@ -198,29 +203,37 @@ public class Histogram<T extends Target> {
           break;
         }
         prevCount += bin.getCount();
-        prevTargetSum.sumUpdate(bin.getTarget());
+        prevTargetSum.sum(bin.getTarget());
       }
 
       double bDiff = p_b - bin_i.getMean();
       double pDiff = bin_i1.getMean() - bin_i.getMean();
       double bpRatio = bDiff / pDiff;
-      double m_b = bin_i.getCount() +
-          (((bin_i1.getCount() - bin_i.getCount()) / pDiff) * bDiff);
 
-      double countSum = prevCount
-              + (bin_i.getCount() / 2)
-              + ((bin_i.getCount() + m_b) / 2) * bpRatio;
+      NumericTarget countTarget = (NumericTarget) computeSum(bpRatio, new NumericTarget(prevCount),
+              new NumericTarget(bin_i.getCount()), new NumericTarget(bin_i1.getCount()));
+      double countSum = countTarget.getTarget();
 
-      T targetSum_m_b = (T) bin_i1.getTarget().clone().subtractUpdate(bin_i.getTarget())
-              .multiplyUpdate(bDiff / pDiff).sumUpdate(bin_i.getTarget());
-      T targetSum = (T) prevTargetSum.sumUpdate(bin_i.getTarget().clone()
-              .multiplyUpdate(0.5)).sumUpdate(targetSum_m_b.sumUpdate(bin_i.getTarget())
-              .multiplyUpdate(bpRatio / 2d));
+      T targetSum = (T) computeSum(bpRatio, prevTargetSum, bin_i.getTarget(), bin_i1.getTarget());
 
       result = new SumResult<T>(countSum, targetSum);
     }
-    
+
     return result;
+  }
+
+  // m = i + (i1 - i) * r
+  // s = p + i/2 + (m + i) * r/2
+  // s = p + i/2 + (i + (i1 - i) * r + i) * r/2
+  // s = p + i/2 + (i + r*i1 - r*i + i) * r/2
+  // s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
+  // s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
+  // s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
+  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+  private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
+    double i1Term = 0.5 * r * r;
+    double iTerm = 0.5 + r - i1Term;
+    return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
   }
 
   /**
@@ -232,14 +245,14 @@ public class Histogram<T extends Target> {
   public ArrayList<Double> uniform(int numberOfBins) {
     ArrayList<Double> uniformBinSplits = new ArrayList<Double>();
     double totalCount = getTotalCount();
-    
+
     if (totalCount > 0) {
       TreeMap<Double, Bin<T>> binSumMap = createBinSumMap();
-      
+
       double gapSize = totalCount / (double) numberOfBins;
       double minGapSize = Math.max(_bins.firstEntry().getValue().getCount(),
               _bins.lastEntry().getValue().getCount()) / 2;
-    
+
       int splits = numberOfBins;
       if (gapSize < minGapSize) {
         splits = (int) (totalCount / minGapSize);
@@ -265,7 +278,7 @@ public class Histogram<T extends Target> {
       checkType(histogram.getTargetType());
       for (Bin<T> bin : histogram.getBins()) {
         insertBin(new Bin<T>(bin));
-      } 
+      }
       mergeBins();
     }
     return this;
@@ -312,7 +325,7 @@ public class Histogram<T extends Target> {
       if (target == null) {
         target = (T) bin.getTarget().init();
       }
-      target.sumUpdate(bin.getTarget());
+      target.sum(bin.getTarget());
     }
     return target;
   }
@@ -454,8 +467,10 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
-  public enum TargetType {none, numeric, categorical, group};
+  public enum TargetType {
 
+    none, numeric, categorical, group
+  };
   private TargetType _targetType;
   private final int _maxBins;
   private final TreeMap<Double, Bin<T>> _bins;
