@@ -7,7 +7,7 @@ public abstract class Target<T extends Target> {
 
   protected abstract void addJSON(JSONArray binJSON, DecimalFormat format);
   protected abstract T sum(T target);
-  protected abstract T mult(double denominator);
+  protected abstract T mult(double multiplier);
 
   @Override
   protected abstract T clone();

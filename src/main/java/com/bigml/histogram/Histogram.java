@@ -467,10 +467,7 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
-  public enum TargetType {
-
-    none, numeric, categorical, group
-  };
+  public enum TargetType {none, numeric, categorical, group};
   private TargetType _targetType;
   private final int _maxBins;
   private final TreeMap<Double, Bin<T>> _bins;
