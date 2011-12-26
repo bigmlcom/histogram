@@ -384,12 +384,12 @@ public class Histogram<T extends Target> {
   }
 
   private void updateGaps(Bin<T> newBin) {
-    Entry<Double, Bin<T>> prevEntry = _bins.floorEntry(newBin.getMean());
+    Entry<Double, Bin<T>> prevEntry = _bins.lowerEntry(newBin.getMean());
     if (prevEntry != null) {
       updateGaps(prevEntry.getValue(), newBin);
     }
 
-    Entry<Double, Bin<T>> nextEntry = _bins.ceilingEntry(newBin.getMean());
+    Entry<Double, Bin<T>> nextEntry = _bins.higherEntry(newBin.getMean());
     if (nextEntry != null) {
       updateGaps(newBin, nextEntry.getValue());
     }

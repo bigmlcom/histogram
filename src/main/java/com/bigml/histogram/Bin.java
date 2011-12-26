@@ -61,7 +61,33 @@ public class Bin<T extends Target> {
     newTarget.sumUpdate(bin.getTarget());
     return new Bin<T>(mean, count, newTarget);
   }
-    
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Bin<T> other = (Bin<T>) obj;
+    if (Double.doubleToLongBits(this._mean) != Double.doubleToLongBits(other._mean)) {
+      return false;
+    }
+    if (Double.doubleToLongBits(this._count) != Double.doubleToLongBits(other._count)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 71 * hash + (int) (Double.doubleToLongBits(this._mean) ^ (Double.doubleToLongBits(this._mean) >>> 32));
+    hash = 71 * hash + (int) (Double.doubleToLongBits(this._count) ^ (Double.doubleToLongBits(this._count) >>> 32));
+    return hash;
+  }
+
   private T _target;
   private final double _mean;
   private double _count;

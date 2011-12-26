@@ -1,5 +1,7 @@
 package com.bigml.histogram;
 
+import org.json.simple.JSONArray;
+
 public class Gap<T extends Target> implements Comparable<Gap> {
 
   public Gap(double space, Bin<T> startBin, Bin<T> endBin) {
@@ -21,8 +23,21 @@ public class Gap<T extends Target> implements Comparable<Gap> {
   }
   
   @Override
+  public String toString() {
+    JSONArray jsonArray = new JSONArray();
+    jsonArray.add(_space);
+    jsonArray.add(_startBin);
+    jsonArray.add(_endBin);
+    return jsonArray.toJSONString();
+  }
+  
+  @Override
   public int compareTo(Gap t) {
-    return Double.compare(this.getSpace(), t.getSpace());
+    int result = Double.compare(this.getSpace(), t.getSpace());
+    if (result == 0) {
+      result = Integer.valueOf(this.hashCode()).compareTo(t.hashCode());
+    }
+    return result;
   }
 
   @Override
