@@ -21,17 +21,12 @@ public class SimpleTarget extends Target<SimpleTarget> {
   }
   
   @Override
-  protected SimpleTarget sumUpdate(SimpleTarget bin) {
+  protected SimpleTarget sum(SimpleTarget bin) {
     return this;
   }
 
   @Override
-  protected SimpleTarget subtractUpdate(SimpleTarget target) {
-    return this;
-  }
-
-  @Override
-  protected SimpleTarget multiplyUpdate(double multiplier) {
+  protected SimpleTarget mult(double multiplier) {
     return this;
   }
   

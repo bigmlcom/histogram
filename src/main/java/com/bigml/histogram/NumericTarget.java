@@ -35,19 +35,13 @@ public class NumericTarget extends Target<NumericTarget> {
   private double _target;
 
   @Override
-  protected NumericTarget sumUpdate(NumericTarget target) {
+  protected NumericTarget sum(NumericTarget target) {
     this._target += target.getTarget();
     return this;
   }
   
   @Override
-  protected NumericTarget subtractUpdate(NumericTarget target) {
-    this._target -= target.getTarget();
-    return this;
-  }
-
-  @Override
-  protected NumericTarget multiplyUpdate(double multiplier) {
+  protected NumericTarget mult(double multiplier) {
     _target *= multiplier;
     return this;
   }
