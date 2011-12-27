@@ -18,6 +18,11 @@ public class NumericTarget extends Target<NumericTarget> {
   }
   
   @Override
+  public String toString() {
+    return String.valueOf(_target);
+  }
+
+  @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     binJSON.add(Double.valueOf(format.format(_target)));
   }

@@ -231,17 +231,4 @@ public class HistogramTest {
     Assert.assertTrue(Math.abs(t1Expected - t1Actual) < 0.02 * t1Expected);
   }
   
-  
-//  @Test
-//  public void heatTest() throws MixedInsertException, SumOutOfRangeException {
-//    HeatMap heatMap = new HeatMap(20, 5);
-//    Random random = new Random();
-//    for (int i = 0; i < 10000; i++) {
-//      heatMap.insert(i, i);
-//    }
-//    System.out.println(heatMap.getHistogram());
-//    
-//    System.out.println("Foo: " + heatMap.getHistogram().extendedSum(1000));
-//  }
-
 }

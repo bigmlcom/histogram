@@ -28,6 +28,11 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   }
   
   @Override
+  public String toString() {
+    return _target.toString();
+  }
+  
+  @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     binJSON.add(_target.toJSON(format));
   }
@@ -47,26 +52,16 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   }
 
   @Override
-  protected SimpleHistogramTarget sumUpdate(SimpleHistogramTarget target) {
+  protected SimpleHistogramTarget sum(SimpleHistogramTarget target) {
     try {
-      _target.merge(target.getTarget());
+      _target.merge(target.clone().getTarget());
     } catch (MixedInsertException ex) {
     }
     return this;
   }
   
   @Override
-  protected SimpleHistogramTarget subtractUpdate(SimpleHistogramTarget target) {
-    // ADAM - not correct
-    for (Bin bin : target.getTarget().getBins()) {
-      Bin negBin = new Bin(bin.getMean(), -bin.getCount(), SimpleTarget.TARGET);
-      _target.insert(negBin);
-    }
-    return this;
-  }
-
-  @Override
-  protected SimpleHistogramTarget  multiplyUpdate(double multiplier) {
+  protected SimpleHistogramTarget mult(double multiplier) {
     for (Bin bin : _target.getBins()) {
       try {
         bin.update(new Bin(bin.getMean(), multiplier * bin.getCount(), SimpleTarget.TARGET));
@@ -75,7 +70,7 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
     }
     return this;
   }
-
+  
   private Histogram<SimpleTarget> _target;
   private int _maxBins;
 }

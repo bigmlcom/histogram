@@ -39,13 +39,22 @@ public class Bin<T extends Target> {
     return _target;
   }
 
-  public void update(Bin bin) throws BinUpdateException {
+  public void sumUpdate(Bin bin) throws BinUpdateException {
     if (_mean != bin.getMean()) {
       throw new BinUpdateException("Bins must have matching means to update");
     }
     
     _count += bin.getCount();
     _target.sum(bin.getTarget());
+  }
+
+  public void update(Bin bin) throws BinUpdateException {
+    if (_mean != bin.getMean()) {
+      throw new BinUpdateException("Bins must have matching means to update");
+    }
+    
+    _count = bin.getCount();
+    _target = (T) bin.getTarget();
   }
 
   @Override

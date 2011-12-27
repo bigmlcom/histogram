@@ -3,7 +3,7 @@ package com.bigml.histogram;
 public class HeatMap {
   
   public HeatMap() {
-    this(128, 128);
+    this(128, 32);
   }
   
   public HeatMap(int xHistSize, int yHistSize) {

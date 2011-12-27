@@ -342,7 +342,7 @@ public class Histogram<T extends Target> {
     Bin<T> existingBin = _bins.get(bin.getMean());
     if (existingBin != null) {
       try {
-        existingBin.update(bin);
+        existingBin.sumUpdate(bin);
       } catch (BinUpdateException ex) {
       }
     } else {
