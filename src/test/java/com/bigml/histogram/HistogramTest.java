@@ -231,4 +231,22 @@ public class HistogramTest {
     Assert.assertTrue(Math.abs(t1Expected - t1Actual) < 0.02 * t1Expected);
   }
   
+  @Test
+  public void densityTest() {
+    Histogram hist = new Histogram(3);
+    hist.insert(new Bin(1, 1, SimpleTarget.TARGET));
+    hist.insert(new Bin(2, 2, SimpleTarget.TARGET));
+    hist.insert(new Bin(3, 1, SimpleTarget.TARGET));
+    
+    Assert.assertEquals(0.0, hist.density(0.0));
+    Assert.assertEquals(0.25, hist.density(0.5));
+    Assert.assertEquals(0.5, hist.density(1.0));
+    Assert.assertEquals(0.75, hist.density(1.5));
+    Assert.assertEquals(1.0, hist.density(2.0));
+    Assert.assertEquals(0.75, hist.density(2.5));
+    Assert.assertEquals(0.5, hist.density(3.0));
+    Assert.assertEquals(0.25, hist.density(3.5));
+    Assert.assertEquals(0.0, hist.density(4.0));
+  }
+  
 }

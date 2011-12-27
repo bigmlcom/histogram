@@ -221,6 +221,66 @@ public class Histogram<T extends Target> {
 
     return result;
   }
+      
+  /**
+   * Returns the density estimate at point p_b
+   * <code>p_b</code>
+   *
+   * @param p_b the density estimate point
+   */
+  public double density(double p_b) {
+    return extendedDensity(p_b).getCount();
+  }
+  
+  /**
+   * Returns a <code>SumResult</code> object which contains the
+   * density estimate at the point <code>p_b</code> along
+   * with the density for the targets.
+   *
+   * @param p_b the density estimate point
+   */
+  public SumResult<T> extendedDensity(double p_b) {
+    double countDensity;
+    T targetDensity;
+    
+    Bin<T> exact = _bins.get(p_b);
+    if (exact != null) {
+      countDensity = binDensity(exact);
+      targetDensity = (T) exact.getTarget().clone().mult(countDensity);
+    } else {
+      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p_b);
+      Entry<Double, Bin<T>> higher = _bins.higherEntry(p_b);
+      if (lower == null && higher == null) {
+        countDensity = 0;
+        targetDensity = null;
+      } else if (lower == null || higher == null) {
+        Bin<T> bin;
+        if (lower != null) {
+          bin = lower.getValue();
+        } else {
+          bin = higher.getValue();
+        }
+        double r = Math.abs(p_b - bin.getMean()) / (0.5 * binRange(bin));
+        if (r < 1) {
+          countDensity = (1 - r) * binDensity(bin);
+          targetDensity = (T) bin.getTarget().clone().mult(1 - r);
+        } else {
+          countDensity = 0;
+          targetDensity = null;
+        }
+      } else {
+        Bin<T> hBin = higher.getValue();
+        Bin<T> lBin = lower.getValue();
+        double r = (p_b - lBin.getMean()) / (hBin.getMean() - lBin.getMean());
+        countDensity = (1 - r) * binDensity(lBin) + r * binDensity(hBin);
+        T lTargetDensity = (T) lBin.getTarget().clone().mult(1 - r);
+        T hTargetDensity = (T) hBin.getTarget().clone().mult(r);
+        targetDensity = (T) lTargetDensity.sum(hTargetDensity);
+      }
+    }
+    
+    return new SumResult<T>(countDensity, targetDensity);
+  }
 
   /**
    * Returns a list containing split points that form bins with
@@ -347,6 +407,33 @@ public class Histogram<T extends Target> {
       }
     }
     return binSumMap;
+  }
+
+  private double binRange(Bin<T> bin) {
+    Entry<Double, Bin<T>> lower = _bins.lowerEntry(bin.getMean());
+    Entry<Double, Bin<T>> higher = _bins.higherEntry(bin.getMean());
+
+    double range;
+    if (lower == null && higher == null) {
+      range = 0;
+    } else if (lower == null) {
+      range = 2 * (higher.getValue().getMean() - bin.getMean());
+    } else if (higher == null) {
+      range = 2 * (bin.getMean() - lower.getValue().getMean());
+    } else {
+      range = (higher.getValue().getMean() - bin.getMean()) +
+              (bin.getMean() - lower.getValue().getMean());
+    }
+    return range;
+  }
+  
+  private double binDensity(Bin<T> bin) {
+    double range = binRange(bin);
+    if (range == 0) {
+      return 0;
+    } else {
+      return bin.getCount() / range;
+    }
   }
 
   // m = i + (i1 - i) * r
