@@ -222,20 +222,6 @@ public class Histogram<T extends Target> {
     return result;
   }
 
-  // m = i + (i1 - i) * r
-  // s = p + i/2 + (m + i) * r/2
-  // s = p + i/2 + (i + (i1 - i) * r + i) * r/2
-  // s = p + i/2 + (i + r*i1 - r*i + i) * r/2
-  // s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
-  // s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
-  // s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
-  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
-  private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
-    double i1Term = 0.5 * r * r;
-    double iTerm = 0.5 + r - i1Term;
-    return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
-  }
-
   /**
    * Returns a list containing split points that form bins with
    * uniform membership
@@ -363,6 +349,20 @@ public class Histogram<T extends Target> {
     return binSumMap;
   }
 
+  // m = i + (i1 - i) * r
+  // s = p + i/2 + (m + i) * r/2
+  // s = p + i/2 + (i + (i1 - i) * r + i) * r/2
+  // s = p + i/2 + (i + r*i1 - r*i + i) * r/2
+  // s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
+  // s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
+  // s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
+  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+  private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
+    double i1Term = 0.5 * r * r;
+    double iTerm = 0.5 + r - i1Term;
+    return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
+  }
+  
   private double findPointForSum(double s, TreeMap<Double, Bin<T>> binSumMap) {
     Entry<Double, Bin<T>> sumEntry = binSumMap.floorEntry(s);
     double sumP_i = sumEntry.getKey();
