@@ -41,6 +41,14 @@ public class HeatMap {
     return _hist;
   }
 
+  public HeatMap merge(HeatMap heatMap) {
+    try {
+      _hist.merge(heatMap.getHistogram());
+    } catch (MixedInsertException ex) {
+    }
+    return this;
+  }
+  
   public static HeatMap merge(Collection<HeatMap> heatMaps) {
     int maxMainHist = -Integer.MAX_VALUE;
     int maxTargetHist = -Integer.MAX_VALUE;
