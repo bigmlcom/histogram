@@ -54,7 +54,7 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   @Override
   protected SimpleHistogramTarget sum(SimpleHistogramTarget target) {
     try {
-      _target.merge(target.clone().getTarget());
+      _target.merge(target.getTarget());
     } catch (MixedInsertException ex) {
     }
     return this;

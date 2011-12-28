@@ -187,7 +187,7 @@ public class Histogram<T extends Target> {
       T targetSum = (T) lastBin.getTarget().clone().mult(0.5d);
       Entry<Double, Bin<T>> prevEntry = _bins.lowerEntry(lastBin.getMean());
       if (prevEntry != null) {
-        targetSum.sum(prevEntry.getValue().getTarget());
+        targetSum.sum(prevEntry.getValue().getTarget().clone());
       }
 
       result = new SumResult<T>(count, targetSum);
@@ -203,7 +203,7 @@ public class Histogram<T extends Target> {
           break;
         }
         prevCount += bin.getCount();
-        prevTargetSum.sum(bin.getTarget());
+        prevTargetSum.sum(bin.getTarget().clone());
       }
 
       double bDiff = p_b - bin_i.getMean();
@@ -378,7 +378,7 @@ public class Histogram<T extends Target> {
       if (target == null) {
         target = (T) bin.getTarget().init();
       }
-      target.sum(bin.getTarget());
+      target.sum(bin.getTarget().clone());
     }
     return target;
   }
