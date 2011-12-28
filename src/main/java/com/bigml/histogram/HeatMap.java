@@ -5,7 +5,7 @@ import java.util.Collection;
 public class HeatMap {
 
   public HeatMap() {
-    this(128, 128);
+    this(64, 64);
   }
 
   public HeatMap(int xHistSize, int yHistSize) {
