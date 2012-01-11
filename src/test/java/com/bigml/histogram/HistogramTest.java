@@ -1,6 +1,5 @@
 package com.bigml.histogram;
 
-import com.sun.source.tree.AssertTree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
