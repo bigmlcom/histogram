@@ -9,10 +9,6 @@ public class NumericTarget extends Target<NumericTarget> {
     _target = target;
   }
 
-  public NumericTarget(Number target) {
-    _target = target.doubleValue();
-  }
-
   public double getTarget() {
     return _target;
   }

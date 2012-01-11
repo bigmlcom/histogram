@@ -16,7 +16,7 @@ public class GroupTarget extends Target<GroupTarget> {
     for (Object value : values) {
       Target target;
       if (value instanceof Number) {
-        target = new NumericTarget((Number) value);
+        target = new NumericTarget(((Number) value).doubleValue());
       } else {
         target = new CategoricalTarget(value);
       }

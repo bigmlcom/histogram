@@ -60,9 +60,9 @@ public class Histogram<T extends Target> {
    *
    * @param point the new point
    */
-  public Histogram<T> insert(Number point) throws MixedInsertException {
+  public Histogram<T> insert(double point) throws MixedInsertException {
     checkType(TargetType.none);
-    insert(new Bin(point.doubleValue(), 1, SimpleTarget.TARGET));
+    insert(new Bin(point, 1, SimpleTarget.TARGET));
     return this;
   }
 
@@ -72,9 +72,9 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the numeric target
    */
-  public Histogram<T> insert(Number point, Number target) throws MixedInsertException {
+  public Histogram<T> insert(double point, double target) throws MixedInsertException {
     checkType(TargetType.numeric);
-    insert(new Bin(point.doubleValue(), 1, new NumericTarget(target)));
+    insert(new Bin(point, 1, new NumericTarget(target)));
     return this;
   }
   
@@ -84,9 +84,9 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the categorical target
    */
-  public Histogram<T> insert(Number point, String target) throws MixedInsertException {
+  public Histogram<T> insert(double point, String target) throws MixedInsertException {
     checkType(TargetType.categorical);
-    insert(new Bin(point.doubleValue(), 1, new CategoricalTarget(target)));
+    insert(new Bin(point, 1, new CategoricalTarget(target)));
     return this;
   }
 
@@ -96,9 +96,9 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the group targets
    */
-  public Histogram<T> insert(Number point, Collection<Object> group) throws MixedInsertException {
+  public Histogram<T> insert(double point, Collection<Object> group) throws MixedInsertException {
     checkType(TargetType.group);
-    insert(new Bin(point.doubleValue(), 1, new GroupTarget(group)));
+    insert(new Bin(point, 1, new GroupTarget(group)));
     return this;
   }
 
@@ -108,10 +108,10 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the categorical target
    */
-  public Histogram<T> insertCategorical(Number point, Object target)
+  public Histogram<T> insertCategorical(double point, Object target)
           throws MixedInsertException {
     checkType(TargetType.categorical);
-    insert(new Bin(point.doubleValue(), 1, new CategoricalTarget(target)));
+    insert(new Bin(point, 1, new CategoricalTarget(target)));
     return this;
   }
 

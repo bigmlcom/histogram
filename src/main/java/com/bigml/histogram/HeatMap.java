@@ -20,10 +20,6 @@ public class HeatMap {
     return this;
   }
 
-  public HeatMap insert(Number x, Number y) {
-    return insert(x.doubleValue(), y.doubleValue());
-  }
-
   public double density(double x, double y) {
     SumResult<SimpleHistogramTarget> xResult = _hist.extendedDensity(x);
     if (xResult.getTargetSum() == null) {
@@ -31,10 +27,6 @@ public class HeatMap {
     } else {
       return xResult.getTargetSum().getTarget().density(y);
     }
-  }
-
-  public double density(Number x, Number y) {
-    return density(x.doubleValue(), y.doubleValue());
   }
 
   public Histogram<SimpleHistogramTarget> getHistogram() {
