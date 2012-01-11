@@ -1,5 +1,6 @@
 package com.bigml.histogram;
 
+import com.sun.source.tree.AssertTree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -249,4 +250,25 @@ public class HistogramTest {
     Assert.assertEquals(0.0, hist.density(4.0));
   }
   
+  @Test
+  public void countWeightedGapTest() throws MixedInsertException {
+    int points = 100000;
+    int numBins = 8;
+    Random random = new Random();
+    
+    Histogram weightedHist = new Histogram(numBins, true);
+    Histogram classicHist = new Histogram(numBins, false);
+
+    for (int i = 0; i < points; i++) {
+      weightedHist.insert(random.nextGaussian());
+      classicHist.insert(random.nextGaussian());
+    }
+    
+    ArrayList<Bin> weightedBins = new ArrayList<Bin>(weightedHist.getBins());
+    ArrayList<Bin> classicBins = new ArrayList<Bin>(classicHist.getBins());
+
+    double wCount = weightedBins.get(0).getCount() + weightedBins.get(numBins - 1).getCount();
+    double cCount = classicBins.get(0).getCount() + classicBins.get(numBins - 1).getCount();
+    Assert.assertTrue("Edges of the weighted hist should have larger counts", (wCount > cCount));
+  }
 }

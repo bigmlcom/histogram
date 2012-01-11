@@ -4,10 +4,14 @@ import org.json.simple.JSONArray;
 
 public class Gap<T extends Target> implements Comparable<Gap> {
 
-  public Gap(double space, Bin<T> startBin, Bin<T> endBin) {
-    _space = space;
+  public Gap(Bin<T> startBin, Bin<T> endBin, double weight) {
     _startBin = startBin;
     _endBin = endBin;
+    _weight = weight;
+  }
+          
+  public Gap(Bin<T> startBin, Bin<T> endBin) {
+    this(startBin, endBin, endBin.getMean() - startBin.getMean());
   }
 
   public Bin<T> getStartBin() {
@@ -19,13 +23,13 @@ public class Gap<T extends Target> implements Comparable<Gap> {
   }
 
   public double getSpace() {
-    return _space;
+    return _weight;
   }
   
   @Override
   public String toString() {
     JSONArray jsonArray = new JSONArray();
-    jsonArray.add(_space);
+    jsonArray.add(_weight);
     jsonArray.add(_startBin);
     jsonArray.add(_endBin);
     return jsonArray.toJSONString();
@@ -49,7 +53,7 @@ public class Gap<T extends Target> implements Comparable<Gap> {
       return false;
     }
     final Gap other = (Gap) obj;
-    if (Double.doubleToLongBits(this._space) != Double.doubleToLongBits(other._space)) {
+    if (Double.doubleToLongBits(this._weight) != Double.doubleToLongBits(other._weight)) {
       return false;
     }
     if (this._startBin != other._startBin && (this._startBin == null || !this._startBin.equals(other._startBin))) {
@@ -61,12 +65,12 @@ public class Gap<T extends Target> implements Comparable<Gap> {
   @Override
   public int hashCode() {
     int hash = 7;
-    hash = 23 * hash + (int) (Double.doubleToLongBits(this._space) ^ (Double.doubleToLongBits(this._space) >>> 32));
+    hash = 23 * hash + (int) (Double.doubleToLongBits(this._weight) ^ (Double.doubleToLongBits(this._weight) >>> 32));
     hash = 23 * hash + (this._startBin != null ? this._startBin.hashCode() : 0);
     return hash;
   }
   
-  private final double _space;
+  private final double _weight;
   private final Bin<T> _startBin;
   private final Bin<T> _endBin;
 }

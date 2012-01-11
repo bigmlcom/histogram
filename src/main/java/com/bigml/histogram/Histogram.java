@@ -35,30 +35,24 @@ public class Histogram<T extends Target> {
    * Creates an empty Histogram with the defined number of bins
    *
    * @param maxBins the maximum number of bins for this histogram
+   * @param countWeightedGaps true if count weighted gaps are desired
    */
-  public Histogram(int maxBins) {
+  public Histogram(int maxBins, boolean countWeightedGaps) {
     _maxBins = maxBins;
     _bins = new TreeMap<Double, Bin<T>>();
     _gaps = new TreeSet<Gap<T>>();
     _binsToGaps = new HashMap<Double, Gap<T>>();
     _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
+    _countWeightedGaps = countWeightedGaps;
   }
 
   /**
-   * Creates a Histogram initialized with the given
-   * <code>bins</code>. If the initial number of <code>bins</code>
-   * exceeds the <code>maxBins</code> then the bins are merged until
-   * the histogram is valid.
+   * Creates an empty Histogram with the defined number of bins
    *
    * @param maxBins the maximum number of bins for this histogram
-   * @param bins the initial bins for the histogram
    */
-  public Histogram(int maxBins, Collection<Bin<T>> bins) throws MixedInsertException {
-    this(maxBins);
-    for (Bin<T> bin : bins) {
-      insertBin(bin);
-    }
-    mergeBins();
+  public Histogram(int maxBins) {
+    this(maxBins, false);
   }
 
   /**
@@ -66,9 +60,9 @@ public class Histogram<T extends Target> {
    *
    * @param point the new point
    */
-  public Histogram<T> insert(double point) throws MixedInsertException {
+  public Histogram<T> insert(Number point) throws MixedInsertException {
     checkType(TargetType.none);
-    insert(new Bin(point, 1, SimpleTarget.TARGET));
+    insert(new Bin(point.doubleValue(), 1, SimpleTarget.TARGET));
     return this;
   }
 
@@ -78,21 +72,21 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the numeric target
    */
-  public Histogram<T> insert(double point, double target) throws MixedInsertException {
+  public Histogram<T> insert(Number point, Number target) throws MixedInsertException {
     checkType(TargetType.numeric);
-    insert(new Bin(point, 1, new NumericTarget(target)));
+    insert(new Bin(point.doubleValue(), 1, new NumericTarget(target)));
     return this;
   }
-
+  
   /**
    * Inserts a new point with a categorical target into the histogram
    *
    * @param point the new point
    * @param target the categorical target
    */
-  public Histogram<T> insert(double point, String target) throws MixedInsertException {
+  public Histogram<T> insert(Number point, String target) throws MixedInsertException {
     checkType(TargetType.categorical);
-    insert(new Bin(point, 1, new CategoricalTarget(target)));
+    insert(new Bin(point.doubleValue(), 1, new CategoricalTarget(target)));
     return this;
   }
 
@@ -102,9 +96,9 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the group targets
    */
-  public Histogram<T> insert(double point, Collection<Object> group) throws MixedInsertException {
+  public Histogram<T> insert(Number point, Collection<Object> group) throws MixedInsertException {
     checkType(TargetType.group);
-    insert(new Bin(point, 1, new GroupTarget(group)));
+    insert(new Bin(point.doubleValue(), 1, new GroupTarget(group)));
     return this;
   }
 
@@ -114,23 +108,10 @@ public class Histogram<T extends Target> {
    * @param point the new point
    * @param target the categorical target
    */
-  public Histogram<T> insertCategorical(double point, Object target)
+  public Histogram<T> insertCategorical(Number point, Object target)
           throws MixedInsertException {
     checkType(TargetType.categorical);
-    insert(new Bin(point, 1, new CategoricalTarget(target)));
-    return this;
-  }
-
-  /**
-   * Inserts a new point with a group of targets into the histogram
-   *
-   * @param point the new point
-   * @param target the categorical target
-   */
-  public Histogram<T> insertGroup(double point, ArrayList<Target> group)
-          throws MixedInsertException {
-    checkType(TargetType.group);
-    insert(new Bin(point, 1, new GroupTarget(group)));
+    insert(new Bin(point.doubleValue(), 1, new CategoricalTarget(target)));
     return this;
   }
 
@@ -154,31 +135,31 @@ public class Histogram<T extends Target> {
 
   /**
    * Returns the approximate number of points less than
-   * <code>p_b</code>
+   * <code>p</code>
    *
-   * @param p_b the sum point
+   * @param p the sum point
    */
-  public double sum(double p_b) throws SumOutOfRangeException {
-    return extendedSum(p_b).getCount();
+  public double sum(double p) throws SumOutOfRangeException {
+    return extendedSum(p).getCount();
   }
 
   /**
    * Returns a <code>SumResult</code> object which contains the
-   * approximate number of points less than <code>p_b</code> along
+   * approximate number of points less than <code>p</code> along
    * with the sum of their targets.
    *
-   * @param p_b the sum point
+   * @param p the sum point
    */
-  public SumResult<T> extendedSum(double p_b) throws SumOutOfRangeException {
+  public SumResult<T> extendedSum(double p) throws SumOutOfRangeException {
     SumResult<T> result = null;
 
     double min = _bins.firstKey();
     double max = _bins.lastKey();
 
-    if (p_b < min || p_b > max) {
-      throw new SumOutOfRangeException("Sum point " + p_b + " should be between "
+    if (p < min || p > max) {
+      throw new SumOutOfRangeException("Sum point " + p + " should be between "
               + min + " and " + max);
-    } else if (p_b == max) {
+    } else if (p == max) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
       double totalCount = this.getTotalCount();
@@ -192,8 +173,8 @@ public class Histogram<T extends Target> {
 
       result = new SumResult<T>(count, targetSum);
     } else {
-      Bin<T> bin_i = _bins.floorEntry(p_b).getValue();
-      Bin<T> bin_i1 = _bins.higherEntry(p_b).getValue();
+      Bin<T> bin_i = _bins.floorEntry(p).getValue();
+      Bin<T> bin_i1 = _bins.higherEntry(p).getValue();
 
       double prevCount = 0;
       T prevTargetSum = (T) _bins.firstEntry().getValue().getTarget().init();
@@ -206,7 +187,7 @@ public class Histogram<T extends Target> {
         prevTargetSum.sum(bin.getTarget().clone());
       }
 
-      double bDiff = p_b - bin_i.getMean();
+      double bDiff = p - bin_i.getMean();
       double pDiff = bin_i1.getMean() - bin_i.getMean();
       double bpRatio = bDiff / pDiff;
 
@@ -223,36 +204,36 @@ public class Histogram<T extends Target> {
   }
       
   /**
-   * Returns the density estimate at point p_b
-   * <code>p_b</code>
+   * Returns the density estimate at point p
+   * <code>p</code>
    *
-   * @param p_b the density estimate point
+   * @param p the density estimate point
    */
-  public double density(double p_b) {
-    return extendedDensity(p_b).getCount();
+  public double density(double p) {
+    return extendedDensity(p).getCount();
   }
   
   /**
    * Returns a <code>SumResult</code> object which contains the
-   * density estimate at the point <code>p_b</code> along
+   * density estimate at the point <code>p</code> along
    * with the density for the targets.
    *
-   * @param p_b the density estimate point
+   * @param p the density estimate point
    */
-  public SumResult<T> extendedDensity(double p_b) {
+  public SumResult<T> extendedDensity(double p) {
     double countDensity;
     T targetDensity;
     
-    Bin<T> exact = _bins.get(p_b);
+    Bin<T> exact = _bins.get(p);
     if (exact != null) {
-      double higher = Double.longBitsToDouble(Double.doubleToLongBits(p_b) + 1);
-      double lower = Double.longBitsToDouble(Double.doubleToLongBits(p_b) - 1);
+      double higher = Double.longBitsToDouble(Double.doubleToLongBits(p) + 1);
+      double lower = Double.longBitsToDouble(Double.doubleToLongBits(p) - 1);
 
       countDensity = (density(higher) + density(lower)) / 2;
       targetDensity = (T) exact.getTarget().clone().mult(countDensity);
     } else {
-      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p_b);
-      Entry<Double, Bin<T>> higher = _bins.higherEntry(p_b);
+      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p);
+      Entry<Double, Bin<T>> higher = _bins.higherEntry(p);
       if (lower == null && higher == null) {
         countDensity = 0;
         targetDensity = null;
@@ -264,8 +245,8 @@ public class Histogram<T extends Target> {
           bin = higher.getValue();
         }
         
-        if (Math.abs(p_b - bin.getMean()) < binGapRange(p_b, bin)) {
-          countDensity = binGapDensity(p_b, bin);
+        if (Math.abs(p - bin.getMean()) < binGapRange(p, bin)) {
+          countDensity = binGapDensity(p, bin);
           targetDensity = (T) bin.getTarget().clone().mult(countDensity);
         } else {
           countDensity = 0;
@@ -273,10 +254,10 @@ public class Histogram<T extends Target> {
         }
       } else {
         Bin<T> hBin = higher.getValue();
-        double hDensity = binGapDensity(p_b, hBin);
+        double hDensity = binGapDensity(p, hBin);
 
         Bin<T> lBin = lower.getValue();
-        double lDensity = binGapDensity(p_b, lBin);
+        double lDensity = binGapDensity(p, lBin);
         
         countDensity = hDensity + lDensity;
         
@@ -396,10 +377,13 @@ public class Histogram<T extends Target> {
     if (existingBin != null) {
       try {
         existingBin.sumUpdate(bin);
+        if (_countWeightedGaps) {
+          updateGaps(bin);
+        }
       } catch (BinUpdateException ex) {
       }
     } else {
-      updateGaps(bin);
+       updateGaps(bin);
       _bins.put(bin.getMean(), bin);
     }
   }
@@ -416,7 +400,7 @@ public class Histogram<T extends Target> {
     return binSumMap;
   }
 
-  private double binGapRange(double p_b, Bin<T> bin) {
+  private double binGapRange(double p, Bin<T> bin) {
     Entry<Double, Bin<T>> lower = _bins.lowerEntry(bin.getMean());
     Entry<Double, Bin<T>> higher = _bins.higherEntry(bin.getMean());
 
@@ -428,7 +412,7 @@ public class Histogram<T extends Target> {
     } else if (higher == null) {
       range = bin.getMean() - lower.getValue().getMean();
     } else {
-      if (p_b < bin.getMean()) {
+      if (p < bin.getMean()) {
         range = bin.getMean() - lower.getValue().getMean();
       } else {
         range = higher.getValue().getMean() - bin.getMean();
@@ -437,8 +421,8 @@ public class Histogram<T extends Target> {
     return range;
   }
   
-  private double binGapDensity(double p_b, Bin<T> bin) {
-    double range = binGapRange(p_b, bin);
+  private double binGapDensity(double p, Bin<T> bin) {
+    double range = binGapRange(p, bin);
     if (range == 0) {
       return 0;
     } else {
@@ -505,16 +489,20 @@ public class Histogram<T extends Target> {
     }
   }
 
-  private void updateGaps(Bin<T> previousBin, Bin<T> nextBin) {
-    double space = nextBin.getMean() - previousBin.getMean();
-    Gap<T> newGap = new Gap<T>(space, previousBin, nextBin);
-
-    Gap<T> previousGap = _binsToGaps.get(previousBin.getMean());
-    if (previousGap != null) {
-      _gaps.remove(previousGap);
+  private void updateGaps(Bin<T> prevBin, Bin<T> nextBin) {
+    double gapWeight = nextBin.getMean() - prevBin.getMean();
+    if (_countWeightedGaps) {
+      gapWeight *= Math.log(Math.E + Math.min(prevBin.getCount(), nextBin.getCount()));
     }
 
-    _binsToGaps.put(previousBin.getMean(), newGap);
+    Gap<T> newGap = new Gap<T>(prevBin, nextBin, gapWeight);
+
+    Gap<T> prevGap = _binsToGaps.get(prevBin.getMean());
+    if (prevGap != null) {
+      _gaps.remove(prevGap);
+    }
+
+    _binsToGaps.put(prevBin.getMean(), newGap);
     _gaps.add(newGap);
   }
 
@@ -571,4 +559,5 @@ public class Histogram<T extends Target> {
   private final TreeSet<Gap<T>> _gaps;
   private final HashMap<Double, Gap<T>> _binsToGaps;
   private final DecimalFormat _decimalFormat;
+  private final boolean _countWeightedGaps;
 }
