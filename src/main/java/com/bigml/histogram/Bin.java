@@ -39,13 +39,22 @@ public class Bin<T extends Target> {
     return _target;
   }
 
-  public void update(Bin bin) throws BinUpdateException {
+  public void sumUpdate(Bin bin) throws BinUpdateException {
     if (_mean != bin.getMean()) {
       throw new BinUpdateException("Bins must have matching means to update");
     }
     
     _count += bin.getCount();
-    _target.sumUpdate(bin.getTarget());
+    _target.sum(bin.getTarget());
+  }
+
+  public void update(Bin bin) throws BinUpdateException {
+    if (_mean != bin.getMean()) {
+      throw new BinUpdateException("Bins must have matching means to update");
+    }
+    
+    _count = bin.getCount();
+    _target = (T) bin.getTarget();
   }
 
   @Override
@@ -56,10 +65,38 @@ public class Bin<T extends Target> {
   public Bin combine(Bin<T> bin) {
     double count = getCount() + bin.getCount();
     double mean = (getWeight() + bin.getWeight()) / (double) count;
-    T target = (T) _target.combine(bin.getTarget());
-    return new Bin<T>(mean, count, target);
+    T newTarget = (T) _target.init();
+    newTarget.sum(_target);
+    newTarget.sum(bin.getTarget());
+    return new Bin<T>(mean, count, newTarget);
   }
-    
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final Bin<T> other = (Bin<T>) obj;
+    if (Double.doubleToLongBits(this._mean) != Double.doubleToLongBits(other._mean)) {
+      return false;
+    }
+    if (Double.doubleToLongBits(this._count) != Double.doubleToLongBits(other._count)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 71 * hash + (int) (Double.doubleToLongBits(this._mean) ^ (Double.doubleToLongBits(this._mean) >>> 32));
+    hash = 71 * hash + (int) (Double.doubleToLongBits(this._count) ^ (Double.doubleToLongBits(this._count) >>> 32));
+    return hash;
+  }
+
   private T _target;
   private final double _mean;
   private double _count;

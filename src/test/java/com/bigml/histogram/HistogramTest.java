@@ -230,4 +230,44 @@ public class HistogramTest {
     double t1Actual = t1Sum.getTarget();
     Assert.assertTrue(Math.abs(t1Expected - t1Actual) < 0.02 * t1Expected);
   }
+  
+  @Test
+  public void densityTest() {
+    Histogram hist = new Histogram(3);
+    hist.insert(new Bin(1, 1, SimpleTarget.TARGET));
+    hist.insert(new Bin(2, 2, SimpleTarget.TARGET));
+    hist.insert(new Bin(3, 1, SimpleTarget.TARGET));
+    
+    Assert.assertEquals(0.0, hist.density(0.0));
+    Assert.assertEquals(0.5, hist.density(0.5));
+    Assert.assertEquals(1.0, hist.density(1.0));
+    Assert.assertEquals(1.5, hist.density(1.5));
+    Assert.assertEquals(1.5, hist.density(2.0));
+    Assert.assertEquals(1.5, hist.density(2.5));
+    Assert.assertEquals(1.0, hist.density(3.0));
+    Assert.assertEquals(0.5, hist.density(3.5));
+    Assert.assertEquals(0.0, hist.density(4.0));
+  }
+  
+  @Test
+  public void countWeightedGapTest() throws MixedInsertException {
+    int points = 100000;
+    int numBins = 8;
+    Random random = new Random();
+    
+    Histogram weightedHist = new Histogram(numBins, true);
+    Histogram classicHist = new Histogram(numBins, false);
+
+    for (int i = 0; i < points; i++) {
+      weightedHist.insert(random.nextGaussian());
+      classicHist.insert(random.nextGaussian());
+    }
+    
+    ArrayList<Bin> weightedBins = new ArrayList<Bin>(weightedHist.getBins());
+    ArrayList<Bin> classicBins = new ArrayList<Bin>(classicHist.getBins());
+
+    double wCount = weightedBins.get(0).getCount() + weightedBins.get(numBins - 1).getCount();
+    double cCount = classicBins.get(0).getCount() + classicBins.get(numBins - 1).getCount();
+    Assert.assertTrue("Edges of the weighted hist should have larger counts", (wCount > cCount));
+  }
 }

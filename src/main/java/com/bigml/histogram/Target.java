@@ -6,10 +6,8 @@ import org.json.simple.JSONArray;
 public abstract class Target<T extends Target> {
 
   protected abstract void addJSON(JSONArray binJSON, DecimalFormat format);
-  protected abstract T combine(T target);
-  protected abstract T sumUpdate(T target);
-  protected abstract T subtractUpdate(T target);
-  protected abstract T multiplyUpdate(double denominator);
+  protected abstract T sum(T target);
+  protected abstract T mult(double multiplier);
 
   @Override
   protected abstract T clone();
