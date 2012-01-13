@@ -1,7 +1,11 @@
 package com.bigml.histogram;
 
-import java.util.Collection;
-
+/**
+ * An experimental implementation of a dynamic heat map using
+ * nested histograms.
+ *
+ * @author Adam Ashenfelter (ashenfelter@bigml.com)
+ */
 public class HeatMap {
 
   public HeatMap() {
@@ -9,8 +13,7 @@ public class HeatMap {
   }
 
   public HeatMap(int xHistSize, int yHistSize) {
-    _hist = new Histogram<SimpleHistogramTarget>(xHistSize);
-    _mainHistSize = xHistSize;
+    _hist = new Histogram<SimpleHistogramTarget>(xHistSize, true);
     _targetHistSize = yHistSize;
   }
 
@@ -41,37 +44,6 @@ public class HeatMap {
     return this;
   }
   
-  public static HeatMap merge(Collection<HeatMap> heatMaps) {
-    int maxMainHist = -Integer.MAX_VALUE;
-    int maxTargetHist = -Integer.MAX_VALUE;
-    for (HeatMap hm : heatMaps) {
-      maxMainHist = Math.max(maxMainHist, hm._mainHistSize);
-      maxTargetHist = Math.max(maxTargetHist, hm._targetHistSize);
-    }
-
-    Histogram<SimpleHistogramTarget> tempHist =
-            new Histogram<SimpleHistogramTarget>(heatMaps.size() * maxMainHist);
-
-    Histogram<SimpleHistogramTarget> newHist = null;
-    try {
-      for (HeatMap hm : heatMaps) {
-        tempHist.merge(hm.getHistogram());
-      }
-
-      newHist = new Histogram<SimpleHistogramTarget>(maxMainHist);
-      newHist.merge(tempHist);
-    } catch (MixedInsertException ex) {
-    }
-
-    return new HeatMap(maxMainHist, maxTargetHist, newHist);
-  }
-
-  private HeatMap(int mainHistSize, int targetHistSize, Histogram<SimpleHistogramTarget> hist) {
-    _hist = hist;
-    _mainHistSize = mainHistSize;
-    _targetHistSize = targetHistSize;
-  }
   private final Histogram<SimpleHistogramTarget> _hist;
-  private final int _mainHistSize;
   private final int _targetHistSize;
 }

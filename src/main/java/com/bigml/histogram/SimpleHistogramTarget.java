@@ -7,7 +7,7 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   
   public SimpleHistogramTarget(int maxBins) {
     _maxBins = maxBins;
-    _target = new Histogram<SimpleTarget>(maxBins);
+    _target = new Histogram<SimpleTarget>(maxBins, true);
   }
   
   public SimpleHistogramTarget(int maxBins, double target) {
@@ -39,12 +39,12 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   
   @Override
   protected SimpleHistogramTarget init() {
-    return new SimpleHistogramTarget(_maxBins, new Histogram<SimpleTarget>(_maxBins));
+    return new SimpleHistogramTarget(_maxBins, new Histogram<SimpleTarget>(_maxBins, true));
   }
 
   @Override
   protected SimpleHistogramTarget clone() {
-    Histogram<SimpleTarget> newHist = new Histogram<SimpleTarget>(_maxBins);
+    Histogram<SimpleTarget> newHist = new Histogram<SimpleTarget>(_maxBins, true);
     for (Bin bin : _target.getBins()) {
       newHist.insert(new Bin(bin));
     }
