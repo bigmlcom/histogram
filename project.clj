@@ -1,5 +1,5 @@
 (defproject histogram "1.7.0"
-  :description "FIXME: write description"
+  :description "Dynamic/streaming histograms"
   :source-path "src/clj"
   :java-source-path "src/java"
   :dependencies [[org.clojure/clojure "1.3.0"]
