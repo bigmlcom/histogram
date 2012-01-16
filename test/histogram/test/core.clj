@@ -97,6 +97,13 @@
                 (/ points 100)))))
 
 (deftest weighted-gap-test
+  ;; Histograms using weighted gaps are less eager to merge bins with
+  ;; large counts.  This test builds weighted and non-weighted
+  ;; histograms using samples from a normal distribution.  The
+  ;; non-weighted histogram should spend more of its bins capturing
+  ;; the tails of the distribution.  With that in mind this test makes
+  ;; sure the bins bracketing the weighted histogram have larger
+  ;; counts than the bins bracketing the non-weighted histogram.
   (let [points 10000
         weighted (bins (reduce insert! (create 32 true) (normal-data points)))
         classic (bins (reduce insert! (create 32 false) (normal-data points)))]
