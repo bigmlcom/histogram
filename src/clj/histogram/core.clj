@@ -142,17 +142,17 @@
      :target (scrub-target (.getTargetSum result))}))
 
 (defn bounds
-  "Returns the bounds of the histogram.  An optional parameter may be
-   supplied to enable a small buffer to the bounds (true or false -
-   default false)."
+  "Returns the bounds of the histogram, nil if the histogram is empty.
+   An optional parameter may be supplied to enable a small buffer to
+   the bounds (true or false - default false)."
   ([^Histogram hist]
      (bounds hist false))
   ([^Histogram hist buffer?]
-     (let [bins (bins hist)
-           l-mean (:mean (last bins))
-           f-mean (:mean (first bins))]
-       (if (and buffer? (second bins))
-         {:min (- f-mean (* 1.1 (- (:mean (second bins)) f-mean)))
-          :max (+ l-mean (* 1.1 (- l-mean (:mean (last (drop-last bins))))))}
-         {:min f-mean
-          :max l-mean}))))
+     (when-let [bins (seq (bins hist))]
+       (let [l-mean (:mean (last bins))
+             f-mean (:mean (first bins))]
+         (if (and buffer? (second bins))
+           {:min (- f-mean (* 1.1 (- (:mean (second bins)) f-mean)))
+            :max (+ l-mean (* 1.1 (- l-mean (:mean (last (drop-last bins))))))}
+           {:min f-mean
+            :max l-mean})))))
