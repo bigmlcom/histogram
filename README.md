@@ -18,7 +18,7 @@ convenient for parallel and distributed algorithms.
 
 # Building
 
-1. Make sure you have Java 1.6
+1. Make sure you have Java 1.6 or newer
 2. Install [leiningen](https://github.com/technomancy/leiningen)
 3. Checkout the histogram project with git
 4. Run `lein jar`
