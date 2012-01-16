@@ -11,12 +11,12 @@
    the maximum number of bins used by the histogram (default 64).  The
    second parameter determines whether the histogram uses gap
    weighting (true or false - default false)."
-  ([bins gap-weighted?]
-     (Histogram. bins gap-weighted?))
+  ([]
+     (create 64))
   ([bins]
      (create bins false))
-  ([]
-     (create 64)))
+  ([bins gap-weighted?]
+     (Histogram. bins gap-weighted?)))
 
 (defn target-type
   "Returns the target-type of the histogram."
@@ -39,11 +39,9 @@
 (defn- insert-type [hist _ & [v _]]
   (let [hist-type (target-type hist)
         value-type (value-type v)]
-    (if (= hist-type :unset)
-      value-type
-      (if (= hist-type value-type)
-        hist-type
-        :mixed))))
+    (cond (= hist-type :unset) value-type
+          (= hist-type value-type) hist-type
+          :else :mixed)))
 
 (defn insert-categorical!
   "Inserts a point with a categorical target into the histogram."
@@ -60,9 +58,7 @@
   (.insert hist (double p)))
 
 (defmethod insert! :numeric [^Histogram hist p v]
-  (if (number? v)
-    (.insert hist (double p) (double v))
-    (throw (MixedInsertException.))))
+  (.insert hist (double p) (double v)))
 
 (defmethod insert! :categorical [^Histogram hist p v]
   (insert-categorical! hist p v))
@@ -73,28 +69,21 @@
 (defmethod insert! :mixed [_ & _]
   (throw (MixedInsertException.)))
 
-(defmethod insert! :default [_ & _]
-  (throw (Exception. "Invalid insert")))
+(defmethod insert! :default [_ & v]
+  (throw (Exception. (apply str "Invalid insert: " (interpose " " v)))))
 
-(defn- bin-target-type [^Target target]
-  (cond (instance? SimpleTarget target) :none
-        (instance? NumericTarget target) :numeric
-        (instance? CategoricalTarget target) :categorical
-        (instance? GroupTarget target) :group
-        :else :invalid))
-
-(defmulti #^{:private true} scrub-target bin-target-type)
+(defmulti ^:private scrub-target class)
 
 (defmethod scrub-target :default [_]
   nil)
 
-(defmethod scrub-target :numeric [^NumericTarget target]
+(defmethod scrub-target NumericTarget [^NumericTarget target]
   (.getTarget target))
 
-(defmethod scrub-target :categorical [^CategoricalTarget target]
+(defmethod scrub-target CategoricalTarget [^CategoricalTarget target]
   (into {} (.getTargetCounts target)))
 
-(defmethod scrub-target :group [^GroupTarget target]
+(defmethod scrub-target GroupTarget [^GroupTarget target]
   (map scrub-target (.getGroupTarget target)))
 
 (defn- scrub-bin [^Bin bin]
@@ -156,6 +145,8 @@
   "Returns the bounds of the histogram.  An optional parameter may be
    supplied to enable a small buffer to the bounds (true or false -
    default false)."
+  ([^Histogram hist]
+     (bounds hist false))
   ([^Histogram hist buffer?]
      (let [bins (bins hist)
            l-mean (:mean (last bins))
@@ -164,6 +155,4 @@
          {:min (- f-mean (* 1.1 (- (:mean (second bins)) f-mean)))
           :max (+ l-mean (* 1.1 (- l-mean (:mean (last (drop-last bins))))))}
          {:min f-mean
-          :max l-mean})))
-  ([^Histogram hist]
-     (bounds hist false)))
+          :max l-mean}))))
