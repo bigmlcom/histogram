@@ -4,8 +4,8 @@
   (:use [histogram.core]
         [clojure.test]))
 
-(defn- about= [v1 v2 range]
-  (>= range (Math/abs (double (- v1 v2)))))
+(defn- about= [v1 v2 epsilon]
+  (>= epsilon (Math/abs (- (double v1) (double v2)))))
 
 (defn- normal-data [size]
   (let [^Random rnd (Random.)]
