@@ -1,1 +1,9 @@
-/target/
+.DS_Store
+.#*
+pom.xml
+*jar
+/lib/
+/classes/
+/temp/
+.lein-deps-sum
+/.lein-failures

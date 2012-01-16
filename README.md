@@ -18,10 +18,10 @@ convenient for parallel and distributed algorithms.
 
 # Building
 
-1. Install [maven](http://maven.apache.org/)
-2. Make sure you have Java 1.6
-3. Checkout the histogram project using Git
-4. Run `mvn clean install`
+1. Make sure you have Java 1.6 or newer
+2. Install [leiningen](https://github.com/technomancy/leiningen)
+3. Checkout the histogram project with git
+4. Run `lein jar`
 
 # Example
 
@@ -43,12 +43,16 @@ double sum = hist.sum(0);
 double split = hist.uniform(2).get(0);
 ```
 
-The `extendedSum` method is available for histograms that include
-categorical or numeric targets.  Examples for the extended histograms
-may be found in the test `com.bigml.histogram.HistogramTest.java`.
+```clojure
+(let [data (repeatedly 100000 #(rand))
+      hist (reduce insert! (create) data)]
+  (median hist))
+```
 
-# Performance Scales `log(n)` with respect to the number of bins in
-the histogram.
+# Performance
+
+Insert time scales `log(n)` with respect to the number of bins in the
+histogram.
 
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
