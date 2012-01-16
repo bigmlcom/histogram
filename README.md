@@ -51,7 +51,8 @@ double split = hist.uniform(2).get(0);
 
 # Performance
 
-Scales `log(n)` with respect to the number of bins in the histogram.
+Insert time scales `log(n)` with respect to the number of bins in the
+histogram.
 
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
