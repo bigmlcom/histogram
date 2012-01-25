@@ -36,14 +36,39 @@ public class Histogram<T extends Target> {
    *
    * @param maxBins the maximum number of bins for this histogram
    * @param countWeightedGaps true if count weighted gaps are desired
+   * @param categories if the histogram uses categorical targets
+   * then a collection of the possible category targets may be 
+   * provided to increase performance
    */
-  public Histogram(int maxBins, boolean countWeightedGaps) {
+  public Histogram(int maxBins, boolean countWeightedGaps, Collection<Object> categories) {
     _maxBins = maxBins;
     _bins = new TreeMap<Double, Bin<T>>();
     _gaps = new TreeSet<Gap<T>>();
     _binsToGaps = new HashMap<Double, Gap<T>>();
     _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
     _countWeightedGaps = countWeightedGaps;
+    
+    if (categories != null && !categories.isEmpty()) {
+      _targetType = TargetType.categorical;
+      _indexMap = new HashMap<Object, Integer>();
+      for (Object category : categories) {
+        if (_indexMap.get(category) == null) {
+          _indexMap.put(category, _indexMap.size());
+        }
+      }
+    } else {
+      _indexMap = null;
+    }
+  }
+
+  /**
+   * Creates an empty Histogram with the defined number of bins
+   *
+   * @param maxBins the maximum number of bins for this histogram
+   * @param countWeightedGaps true if count weighted gaps are desired
+   */
+  public Histogram(int maxBins, boolean countWeightedGaps) {
+    this(maxBins, countWeightedGaps, null);
   }
 
   /**
@@ -85,9 +110,7 @@ public class Histogram<T extends Target> {
    * @param target the categorical target
    */
   public Histogram<T> insert(double point, String target) throws MixedInsertException {
-    checkType(TargetType.categorical);
-    insert(new Bin(point, 1, new CategoricalTarget(target)));
-    return this;
+    return insertCategorical(point, target);
   }
 
   /**
@@ -111,7 +134,13 @@ public class Histogram<T extends Target> {
   public Histogram<T> insertCategorical(double point, Object target)
           throws MixedInsertException {
     checkType(TargetType.categorical);
-    insert(new Bin(point, 1, new CategoricalTarget(target)));
+    Target catTarget;
+    if (_indexMap == null) {
+      catTarget = new CategoricalTarget(target);
+    } else {
+      catTarget = new ArrayCategoricalTarget(_indexMap, target);
+    }
+    insert(new Bin(point, 1, catTarget));
     return this;
   }
 
@@ -308,9 +337,17 @@ public class Histogram<T extends Target> {
    * @param histogram the histogram to be merged
    */
   public Histogram merge(Histogram<T> histogram) throws MixedInsertException {
-    if (!histogram.getBins().isEmpty()) {
+    if ((_indexMap != null && 
+            (histogram._indexMap == null || !_indexMap.equals(histogram._indexMap))) || 
+            (_indexMap == null && histogram._indexMap != null)) {
+      throw new MixedInsertException();
+    } else if (!histogram.getBins().isEmpty()) {
       checkType(histogram.getTargetType());
       for (Bin<T> bin : histogram.getBins()) {
+        Bin<T> newBin = new Bin<T>(bin);
+        if (_indexMap != null) {
+          ((ArrayCategoricalTarget) newBin.getTarget()).setIndexMap(_indexMap);
+        }
         insertBin(new Bin<T>(bin));
       }
       mergeBins();
@@ -560,4 +597,5 @@ public class Histogram<T extends Target> {
   private final HashMap<Double, Gap<T>> _binsToGaps;
   private final DecimalFormat _decimalFormat;
   private final boolean _countWeightedGaps;
+  private final HashMap<Object, Integer> _indexMap;
 }
