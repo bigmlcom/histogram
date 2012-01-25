@@ -93,6 +93,11 @@
         target (scrub-target (.getTarget bin))]
     (if target (assoc bin-map :target target) bin-map)))
 
+(defn total-count
+  "Returns the count of the points summarized by the histogram."
+  [^Histogram hist]
+  (.getTotalCount hist))
+
 (defn bins
   "Returns the bins contained in the histogram."
   [^Histogram hist]
