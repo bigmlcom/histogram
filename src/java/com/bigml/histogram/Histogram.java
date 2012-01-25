@@ -337,9 +337,14 @@ public class Histogram<T extends Target> {
    * @param histogram the histogram to be merged
    */
   public Histogram merge(Histogram<T> histogram) throws MixedInsertException {
-    if ((_indexMap != null && 
-            (histogram._indexMap == null || !_indexMap.equals(histogram._indexMap))) || 
-            (_indexMap == null && histogram._indexMap != null)) {
+    if (_indexMap == null && histogram._indexMap != null) {
+      if (getBins().isEmpty()) {
+        _indexMap = histogram._indexMap;
+      } else {
+        throw new MixedInsertException();
+      }
+    }
+    if (_indexMap != null && !_indexMap.equals(histogram._indexMap)) {
       throw new MixedInsertException();
     } else if (!histogram.getBins().isEmpty()) {
       checkType(histogram.getTargetType());
@@ -597,5 +602,5 @@ public class Histogram<T extends Target> {
   private final HashMap<Double, Gap<T>> _binsToGaps;
   private final DecimalFormat _decimalFormat;
   private final boolean _countWeightedGaps;
-  private final HashMap<Object, Integer> _indexMap;
+  private HashMap<Object, Integer> _indexMap;
 }
