@@ -136,7 +136,7 @@ public class Histogram<T extends Target> {
     checkType(TargetType.categorical);
     Target catTarget;
     if (_indexMap == null) {
-      catTarget = new CategoricalTarget(target);
+      catTarget = new MapCategoricalTarget(target);
     } else {
       catTarget = new ArrayCategoricalTarget(_indexMap, target);
     }

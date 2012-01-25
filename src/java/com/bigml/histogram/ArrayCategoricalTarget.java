@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> {
+public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> implements CategoricalTarget {
 
   public ArrayCategoricalTarget(Map<Object, Integer> indexMap) {
     _indexMap = indexMap;
@@ -30,7 +30,7 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> {
     _indexMap = indexMap;
   }
   
-  public HashMap<Object, Double> getTargetCounts() {
+  public HashMap<Object, Double> getCounts() {
     HashMap<Object, Double> countMap = new HashMap<Object, Double>();
     for (Entry<Object, Integer> entry : _indexMap.entrySet()) {
       Object category = entry.getKey();

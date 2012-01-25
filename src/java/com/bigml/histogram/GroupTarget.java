@@ -18,7 +18,7 @@ public class GroupTarget extends Target<GroupTarget> {
       if (value instanceof Number) {
         target = new NumericTarget(((Number) value).doubleValue());
       } else {
-        target = new CategoricalTarget(value);
+        target = new MapCategoricalTarget(value);
       }
       group.add(target);
     }
