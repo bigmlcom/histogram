@@ -2,7 +2,7 @@
   (:import (com.bigml.histogram Histogram Histogram$TargetType Bin
                                 Target SimpleTarget NumericTarget
                                 ArrayCategoricalTarget GroupTarget
-                                CategoricalTarget SumResult
+                                MapCategoricalTarget SumResult
                                 MixedInsertException)))
 
 (defn create
@@ -78,11 +78,11 @@
 (defmethod scrub-target NumericTarget [^NumericTarget target]
   (.getTarget target))
 
-(defmethod scrub-target CategoricalTarget [^CategoricalTarget target]
-  (into {} (.getTargetCounts target)))
+(defmethod scrub-target MapCategoricalTarget [^MapCategoricalTarget target]
+  (into {} (.getCounts target)))
 
 (defmethod scrub-target ArrayCategoricalTarget [^ArrayCategoricalTarget target]
-  (into {} (.getTargetCounts target)))
+  (into {} (.getCounts target)))
 
 (defmethod scrub-target GroupTarget [^GroupTarget target]
   (map scrub-target (.getGroupTarget target)))
