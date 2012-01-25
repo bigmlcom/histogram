@@ -1,22 +1,20 @@
 (ns histogram.core
   (:import (com.bigml.histogram Histogram Histogram$TargetType Bin
                                 Target SimpleTarget NumericTarget
-                                CategoricalTarget GroupTarget SumResult
+                                ArrayCategoricalTarget GroupTarget
+                                CategoricalTarget SumResult
                                 MixedInsertException)))
 
 (defn create
   "Creates a histogram.
 
-   Two optional parameters may be provided.  The first parameters sets
-   the maximum number of bins used by the histogram (default 64).  The
-   second parameter determines whether the histogram uses gap
-   weighting (true or false - default false)."
-  ([]
-     (create 64))
-  ([bins]
-     (create bins false))
-  ([bins gap-weighted?]
-     (Histogram. bins gap-weighted?)))
+   Optional parameters:
+     :bins - Maximum bins to be used by the histogram (default 64)
+     :gap-weighted? - Use gap weighting (true or false - default false)
+     :categories - Collection of valid categories (improves performance)"
+  [& {:keys [bins gap-weighted? categories]
+      :or {bins 64 gap-weighted? false}}]
+  (Histogram. bins gap-weighted? categories))
 
 (defn target-type
   "Returns the target-type of the histogram."
@@ -83,6 +81,9 @@
 (defmethod scrub-target CategoricalTarget [^CategoricalTarget target]
   (into {} (.getTargetCounts target)))
 
+(defmethod scrub-target ArrayCategoricalTarget [^ArrayCategoricalTarget target]
+  (into {} (.getTargetCounts target)))
+
 (defmethod scrub-target GroupTarget [^GroupTarget target]
   (map scrub-target (.getGroupTarget target)))
 
@@ -91,6 +92,11 @@
                  :count (long (.getCount bin))}
         target (scrub-target (.getTarget bin))]
     (if target (assoc bin-map :target target) bin-map)))
+
+(defn total-count
+  "Returns the count of the points summarized by the histogram."
+  [^Histogram hist]
+  (.getTotalCount hist))
 
 (defn bins
   "Returns the bins contained in the histogram."

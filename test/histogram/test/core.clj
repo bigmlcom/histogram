@@ -56,7 +56,10 @@
     (doseq [x vals y vals]
       (if (= x y)
         (is (insert-pair x y))
-        (is (thrown? Throwable (insert-pair x y)))))))
+        (is (thrown? Throwable (insert-pair x y))))))
+  (is (thrown? Throwable (insert! (create :categories [:a :b]) :c)))
+  (is (thrown? Throwable (merge! (create :categories [:a :b])
+                                 (create :categories [:b :c])))))
 
 (deftest density-test
   (let [hist (reduce insert! (create) [1 2 2 3])]
@@ -74,6 +77,19 @@
   (let [points 10000
         hist (reduce (fn [h [x y]] (insert! h x y))
                      (create)
+                     (cat-data points))
+        ext-sum (extended-sum hist 0.5)]
+    (is (about= (:apple (:target ext-sum))
+                (/ points 3)
+                (/ points 50)))
+    (is (about= (:orange (:target ext-sum))
+                (/ points 6)
+                (/ points 50)))))
+
+(deftest categorical-array-test
+  (let [points 10000
+        hist (reduce (fn [h [x y]] (insert! h x y))
+                     (create :categories [:apple :orange :grape])
                      (cat-data points))
         ext-sum (extended-sum hist 0.5)]
     (is (about= (:apple (:target ext-sum))
@@ -105,7 +121,11 @@
   ;; sure the bins bracketing the weighted histogram have larger
   ;; counts than the bins bracketing the non-weighted histogram.
   (let [points 10000
-        weighted (bins (reduce insert! (create 32 true) (normal-data points)))
-        classic (bins (reduce insert! (create 32 false) (normal-data points)))]
+        weighted (bins (reduce insert!
+                               (create :bins 32 :gap-weighted? true)
+                               (normal-data points)))
+        classic (bins (reduce insert!
+                              (create :bins 32 :gap-weighted? false)
+                              (normal-data points)))]
     (> (+ (:count (first weighted) (last weighted)))
        (+ (:count (first classic) (last classic))))))
