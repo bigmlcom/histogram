@@ -28,7 +28,7 @@
   (let [points 10000]
     (is (about= (sum (reduce insert! (create) (normal-data points)) 0)
                 (/ points 2)
-                (/ points 100)))))
+                (/ points 50)))))
 
 (deftest median-test
   (let [points 10000]
@@ -48,7 +48,7 @@
         merged-hist (reduce merge! hists)]
     (is (about= (sum merged-hist 0)
                 (/ (* points hist-count) 2)
-                (/ (* points hist-count) 100)))))
+                (/ (* points hist-count) 50)))))
 
 (deftest mixed-test
   (let [insert-pair #(apply insert! (apply insert! (create) %1) %2)
@@ -129,3 +129,11 @@
                               (normal-data points)))]
     (> (+ (:count (first weighted) (last weighted)))
        (+ (:count (first classic) (last classic))))))
+
+(deftest round-trip-test
+  (let [points 10000
+        hist1 (reduce (fn [h [x y]] (insert! h x y))
+                     (create)
+                     (cat-data points))
+        hist2 (reduce insert-bin! (create) (bins hist1))]
+    (= (bins hist1) (bins hist2))))
