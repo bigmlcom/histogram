@@ -129,3 +129,11 @@
                               (normal-data points)))]
     (> (+ (:count (first weighted) (last weighted)))
        (+ (:count (first classic) (last classic))))))
+
+(deftest round-trip-test
+  (let [points 10000
+        hist1 (reduce (fn [h [x y]] (insert! h x y))
+                     (create)
+                     (cat-data points))
+        hist2 (reduce insert-bin! (create) (bins hist1))]
+    (= (bins hist1) (bins hist2))))

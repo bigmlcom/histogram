@@ -3,7 +3,8 @@
                                 Target SimpleTarget NumericTarget
                                 ArrayCategoricalTarget GroupTarget
                                 MapCategoricalTarget SumResult
-                                MixedInsertException)))
+                                MixedInsertException)
+           (java.util HashMap ArrayList)))
 
 (defn create
   "Creates a histogram.
@@ -15,6 +16,27 @@
   [& {:keys [bins gap-weighted? categories]
       :or {bins 64 gap-weighted? false}}]
   (Histogram. bins gap-weighted? categories))
+
+(defn- java-target [target]
+  (cond (number? target)
+        (NumericTarget. target)
+        (map? target)
+        (MapCategoricalTarget. (HashMap. target))
+        (sequential? target)
+        (GroupTarget. (ArrayList. (map java-target target)))
+        (nil? target)
+        SimpleTarget/TARGET))
+
+(defn- java-bin [bin]
+  (let [{:keys [mean count target]} bin]
+    (Bin. mean count ^Target (java-target target))))
+
+(defn insert-bin!
+  "Inserts a bin into the histogram."
+  [^Histogram hist bin]
+  (if (instance? Bin bin)
+    (.insert hist ^Bin bin)
+    (.insert hist ^Bin (java-bin bin))))
 
 (defn target-type
   "Returns the target-type of the histogram."
