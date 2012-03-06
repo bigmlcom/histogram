@@ -97,7 +97,10 @@
                 (/ points 50)))
     (is (about= (:orange (:target ext-sum))
                 (/ points 6)
-                (/ points 50)))))
+                (/ points 50)))
+    (is (about= 3333 (:orange (total-target-sum hist)) 100))
+    (is (about= 3333 (:grape (total-target-sum hist)) 100))
+    (is (about= 3333 (:apple (total-target-sum hist)) 100))))
 
 (deftest group-test
   (let [points 10000
@@ -137,3 +140,7 @@
                      (cat-data points))
         hist2 (reduce insert-bin! (create) (bins hist1))]
     (= (bins hist1) (bins hist2))))
+
+(deftest hist-test
+  (is (histogram? (create)))
+  (is (not (histogram? "forjao"))))

@@ -18,7 +18,7 @@
   (Histogram. bins gap-weighted? categories))
 
 (defn histogram?
-  "Returns true if the input is a histogram"
+  "Returns true if the input is a histogram."
   [hist]
   (instance? Histogram hist))
 
