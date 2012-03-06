@@ -17,6 +17,11 @@
       :or {bins 64 gap-weighted? false}}]
   (Histogram. bins gap-weighted? categories))
 
+(defn histogram?
+  "Returns true if the input is a histogram"
+  [hist]
+  (instance? Histogram hist))
+
 (defn- java-target [target]
   (cond (number? target)
         (NumericTarget. target)
@@ -119,6 +124,11 @@
   "Returns the count of the points summarized by the histogram."
   [^Histogram hist]
   (.getTotalCount hist))
+
+(defn total-target-sum
+  "Returns the sum of the targets for each bin in the histogram."
+  [^Histogram hist]
+  (scrub-target (.getTotalTargetSum hist)))
 
 (defn bins
   "Returns the bins contained in the histogram."
