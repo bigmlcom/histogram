@@ -144,3 +144,10 @@
 (deftest hist-test
   (is (histogram? (create)))
   (is (not (histogram? "forjao"))))
+
+(deftest weighted-test
+  (let [data [1 2 2 3 4]
+        hist (reduce insert!
+                     (create :bins 3 :gap-weighted? true)
+                     data)]
+    (is (== (total-count hist) (count data)))))
