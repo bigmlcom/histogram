@@ -420,7 +420,7 @@ public class Histogram<T extends Target> {
       try {
         existingBin.sumUpdate(bin);
         if (_countWeightedGaps) {
-          updateGaps(bin);
+          updateGaps(existingBin);
         }
       } catch (BinUpdateException ex) {
       }
