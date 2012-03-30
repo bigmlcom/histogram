@@ -153,14 +153,15 @@
   (seq (.uniform hist max-bins)))
 
 (defn median
-  "Returns an approximate median."
+  "Returns an approximate median for the points inserted into the
+   histogram."
   [^Histogram hist]
   (first (uniform hist 2)))
 
 (defn mean
   [^Histogram hist]
-  "Returns the mean."
-  (when (not (empty? (.getBins hist)))
+  "Returns the mean for the points inserted into the histogram."
+  (when-not (empty? (.getBins hist))
     (.getMean ^Bin (reduce (fn [^Bin b1 ^Bin b2] (.combine b1 b2))
                            (.getBins hist)))))
 
