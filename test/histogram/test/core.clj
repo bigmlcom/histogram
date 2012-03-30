@@ -37,6 +37,12 @@
     (is (about= (median (reduce insert! (create) (normal-data points)))
                 0 0.05))))
 
+(deftest mean-test
+  (let [points 1001]
+    (is (== (/ (dec points) 2)
+            (mean (reduce insert! (create) (range points)))))))
+
+
 (deftest merge-test
   (is (empty? (bins (merge! (create) (create)))))
   (is (seq (bins (merge! (insert! (create) 1) (create)))))
@@ -98,9 +104,9 @@
     (is (about= (:orange (:target ext-sum))
                 (/ points 6)
                 (/ points 50)))
-    (is (about= 3333 (:orange (total-target-sum hist)) 100))
-    (is (about= 3333 (:grape (total-target-sum hist)) 100))
-    (is (about= 3333 (:apple (total-target-sum hist)) 100))))
+    (is (about= 3333 (:orange (total-target-sum hist)) 150))
+    (is (about= 3333 (:grape (total-target-sum hist)) 150))
+    (is (about= 3333 (:apple (total-target-sum hist)) 150))))
 
 (deftest group-test
   (let [points 10000
