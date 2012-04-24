@@ -40,7 +40,8 @@ public class Histogram<T extends Target> {
    * then a collection of the possible category targets may be 
    * provided to increase performance
    */
-  public Histogram(int maxBins, boolean countWeightedGaps, Collection<Object> categories) {
+  public Histogram(int maxBins, boolean countWeightedGaps,
+          Collection<Object> categories, Collection<TargetType> groupTypes) {
     _maxBins = maxBins;
     _bins = new TreeMap<Double, Bin<T>>();
     _gaps = new TreeSet<Gap<T>>();
@@ -50,13 +51,18 @@ public class Histogram<T extends Target> {
     
     if (categories != null && !categories.isEmpty()) {
       _targetType = TargetType.categorical;
+      _groupTypes = null;
       _indexMap = new HashMap<Object, Integer>();
       for (Object category : categories) {
         if (_indexMap.get(category) == null) {
           _indexMap.put(category, _indexMap.size());
         }
       }
+    } else if (groupTypes != null && !groupTypes.isEmpty()) {
+      _targetType = TargetType.group;
+      _groupTypes = new ArrayList<TargetType>(groupTypes);
     } else {
+      _groupTypes = null;
       _indexMap = null;
     }
   }
@@ -68,7 +74,7 @@ public class Histogram<T extends Target> {
    * @param countWeightedGaps true if count weighted gaps are desired
    */
   public Histogram(int maxBins, boolean countWeightedGaps) {
-    this(maxBins, countWeightedGaps, null);
+    this(maxBins, countWeightedGaps, null, null);
   }
 
   /**
@@ -79,7 +85,7 @@ public class Histogram<T extends Target> {
   public Histogram(int maxBins) {
     this(maxBins, false);
   }
-
+         
   /**
    * Inserts a new point into the histogram
    *
@@ -92,19 +98,17 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Inserts a new point with a numeric target into the histogram
+   * Inserts a new point with a numeric target into the histogram.
    *
    * @param point the new point
    * @param target the numeric target
    */
   public Histogram<T> insert(double point, double target) throws MixedInsertException {
-    checkType(TargetType.numeric);
-    insert(new Bin(point, 1, new NumericTarget(target)));
-    return this;
+    return insertNumeric(point, target);
   }
   
   /**
-   * Inserts a new point with a categorical target into the histogram
+   * Inserts a new point with a categorical target into the histogram.
    *
    * @param point the new point
    * @param target the categorical target
@@ -114,19 +118,19 @@ public class Histogram<T extends Target> {
   }
 
   /**
-   * Inserts a new point with a group of targets into the histogram
+   * Inserts a new point with a group of targets into the histogram.
+   * A null group target is _not_ allowed.
    *
    * @param point the new point
    * @param target the group targets
    */
   public Histogram<T> insert(double point, Collection<Object> group) throws MixedInsertException {
-    checkType(TargetType.group);
-    insert(new Bin(point, 1, new GroupTarget(group)));
-    return this;
+    return insertGroup(point, group);
   }
 
   /**
-   * Inserts a new point with a categorical target into the histogram
+   * Inserts a new point with a categorical target into the histogram.
+   * Null target values are allowed.
    *
    * @param point the new point
    * @param target the categorical target
@@ -141,6 +145,47 @@ public class Histogram<T extends Target> {
       catTarget = new ArrayCategoricalTarget(_indexMap, target);
     }
     insert(new Bin(point, 1, catTarget));
+    return this;
+  }
+  
+  /**
+   * Inserts a new point with a numeric target into the histogram.
+   * Null target values are allowed.
+   *
+   * @param point the new point
+   * @param target the categorical target
+   */
+  public Histogram<T> insertNumeric(double point, Double target)
+          throws MixedInsertException {
+    checkType(TargetType.numeric);
+    insert(new Bin(point, 1, new NumericTarget(target)));
+    return this;
+  }
+
+  /**
+   * Inserts a new point with a group target into the histogram.
+   * A null group target is _not_ allowed.
+   *
+   * @param point the new point
+   * @param target the categorical target
+   */
+  public Histogram<T> insertGroup(double point, Collection<Object> group)
+          throws MixedInsertException {
+    checkType(TargetType.group);
+    if (group == null) {
+      throw new MixedInsertException();
+    }
+    
+    GroupTarget groupTarget = new GroupTarget(group, _groupTypes);
+    insert(new Bin(point, 1, groupTarget));
+
+    if (_groupTypes == null) {
+      _groupTypes = new ArrayList<TargetType>();
+      for (Target t : groupTarget.getGroupTarget()) {
+        _groupTypes.add(t.getTargetType());
+      }
+    }
+    
     return this;
   }
 
@@ -162,6 +207,14 @@ public class Histogram<T extends Target> {
     return _targetType;
   }
 
+  
+  /**
+   * Returns the target types for a group histogram
+   */
+  public ArrayList<TargetType> getGroupTypes() {
+    return _groupTypes;
+  }
+  
   /**
    * Returns the approximate number of points less than
    * <code>p</code>
@@ -594,7 +647,7 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
-  public enum TargetType {none, numeric, categorical, group};
+  public enum TargetType {none, numeric, categorical, group, histogram};
   private TargetType _targetType;
   private final int _maxBins;
   private final TreeMap<Double, Bin<T>> _bins;
@@ -602,5 +655,6 @@ public class Histogram<T extends Target> {
   private final HashMap<Double, Gap<T>> _binsToGaps;
   private final DecimalFormat _decimalFormat;
   private final boolean _countWeightedGaps;
+  private ArrayList<TargetType> _groupTypes;
   private HashMap<Object, Integer> _indexMap;
 }

@@ -1,5 +1,6 @@
 package com.bigml.histogram;
 
+import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,19 +11,23 @@ import org.json.simple.JSONObject;
 
 public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> implements CategoricalTarget {
 
-  public ArrayCategoricalTarget(Map<Object, Integer> indexMap) {
+  public ArrayCategoricalTarget(Map<Object, Integer> indexMap, double missingCount) {
     _indexMap = indexMap;
     _target = new double[indexMap.size()];
     Arrays.fill(_target, 0);
+    _missingCount = missingCount;
   }
 
   public ArrayCategoricalTarget(Map<Object, Integer> indexMap, Object category) throws MixedInsertException {
-    this(indexMap);
-    Integer index = indexMap.get(category);
-    if (index == null) {
-      throw new MixedInsertException();
-    } else {
-      _target[index]++;
+    this(indexMap, category == null ? 1 : 0);
+
+    if (category != null) {
+      Integer index = indexMap.get(category);
+      if (index == null) {
+        throw new MixedInsertException();
+      } else {
+        _target[index]++;
+      }
     }
   }
 
@@ -41,6 +46,16 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> imple
   }
 
   @Override
+  public double getMissingCount() {
+    return _missingCount;
+  }
+
+  @Override
+  public TargetType getTargetType() {
+    return Histogram.TargetType.categorical;
+  }
+  
+  @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONObject counts = new JSONObject();
     for (Entry<Object,Integer> categoryIndex : _indexMap.entrySet()) {
@@ -57,7 +72,7 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> imple
     for (int i = 0; i < _target.length; i++) {
       _target[i] += target._target[i];
     }
-    
+    _missingCount += target.getMissingCount();
     return this;
   }
 
@@ -66,22 +81,23 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> imple
     for (int i = 0; i < _target.length; i++) {
       _target[i] *= multiplier;
     }
-
+   _missingCount *= multiplier;
    return this;
   }
 
   @Override
   protected ArrayCategoricalTarget clone() {
-    ArrayCategoricalTarget rct = new ArrayCategoricalTarget(_indexMap);
+    ArrayCategoricalTarget rct = new ArrayCategoricalTarget(_indexMap, _missingCount);
     rct._target = (double[]) _target.clone();
     return rct;
   }
 
   @Override
   protected ArrayCategoricalTarget init() {
-    return new ArrayCategoricalTarget(_indexMap);
+    return new ArrayCategoricalTarget(_indexMap, 0);
   }
   
   private Map<Object, Integer> _indexMap;
   private double[] _target;
+  private double _missingCount;
 }

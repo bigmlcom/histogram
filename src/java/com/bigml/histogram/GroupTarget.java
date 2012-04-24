@@ -1,8 +1,10 @@
 package com.bigml.histogram;
 
+import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import org.json.simple.JSONArray;
 
 public class GroupTarget extends Target<GroupTarget> {
@@ -11,16 +13,35 @@ public class GroupTarget extends Target<GroupTarget> {
     _target = group;
   }
   
-  public GroupTarget(Collection<Object> values) {
+  public GroupTarget(Collection<Object> values, Collection<TargetType> types) {
     ArrayList<Target> group = new ArrayList<Target>();
-    for (Object value : values) {
-      Target target;
-      if (value instanceof Number) {
-        target = new NumericTarget(((Number) value).doubleValue());
-      } else {
-        target = new MapCategoricalTarget(value);
+    
+    if (types == null) {
+      for (Object value : values) {
+        Target target;
+        if (value instanceof Number) {
+          Double tVal = (value == null ? null : ((Number) value).doubleValue());
+          target = new NumericTarget(tVal);
+        } else {
+          target = new MapCategoricalTarget(value);
+        }
+        group.add(target);
       }
-      group.add(target);
+    } else {
+      Target target;
+      Iterator<Object> valueIter = values.iterator();
+      Iterator<TargetType> typeIter = types.iterator();
+      while (valueIter.hasNext()) {
+        Object value = valueIter.next();
+        TargetType type = typeIter.next();
+        if (type == TargetType.numeric) {
+          Double tVal = (value == null ? null : ((Number) value).doubleValue());
+          target = new NumericTarget(tVal);
+        } else {
+          target = new MapCategoricalTarget(value);
+        }
+        group.add(target);
+      }
     }
     _target = group;
   }
@@ -28,7 +49,18 @@ public class GroupTarget extends Target<GroupTarget> {
   public ArrayList<Target> getGroupTarget() {
     return _target;
   }
-    
+
+  /* Missing values not allowed for GroupTarget */
+  @Override
+  public double getMissingCount() {
+    return 0;
+  }
+
+  @Override
+  public TargetType getTargetType() {
+    return Histogram.TargetType.group;
+  }
+
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONArray targetsJSON = new JSONArray();

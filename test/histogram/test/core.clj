@@ -14,15 +14,17 @@
 (defn- rand-data [size]
   (repeatedly size #(rand)))
 
-(defn- cat-data [size]
+(defn- cat-data [size with-missing]
   (repeatedly size
-              #(let [v (rand)]
-                 [v (cond (< v (/ 1 3)) :apple
-                          (< v (/ 2 3)) :orange
-                          :else :grape)])))
+              #(let [x (rand)
+                     y (cond (< x (/ 1 3)) :apple
+                          (< x (/ 2 3)) :orange
+                          :else :grape)]
+                 [x (if (or (not with-missing) (> 0.5 (rand)))
+                      y nil)])))
 
-(defn- group-data [size]
-  (map list (repeatedly #(rand)) (cat-data size)))
+(defn- group-data [size with-missing]
+  (map list (repeatedly #(rand)) (cat-data size with-missing)))
 
 (deftest sum-test
   (let [points 10000]
@@ -83,12 +85,12 @@
   (let [points 10000
         hist (reduce (fn [h [x y]] (insert! h x y))
                      (create)
-                     (cat-data points))
+                     (cat-data points false))
         ext-sum (extended-sum hist 0.5)]
-    (is (about= (:apple (:target ext-sum))
+    (is (about= (:apple (:counts (:target ext-sum)))
                 (/ points 3)
                 (/ points 50)))
-    (is (about= (:orange (:target ext-sum))
+    (is (about= (:orange (:counts (:target ext-sum)))
                 (/ points 6)
                 (/ points 50)))))
 
@@ -96,28 +98,30 @@
   (let [points 10000
         hist (reduce (fn [h [x y]] (insert! h x y))
                      (create :categories [:apple :orange :grape])
-                     (cat-data points))
+                     (cat-data points false))
         ext-sum (extended-sum hist 0.5)]
-    (is (about= (:apple (:target ext-sum))
+    (is (about= (:apple (:counts (:target ext-sum)))
                 (/ points 3)
                 (/ points 50)))
-    (is (about= (:orange (:target ext-sum))
+    (is (about= (:orange (:counts (:target ext-sum)))
                 (/ points 6)
                 (/ points 50)))
-    (is (about= 3333 (:orange (total-target-sum hist)) 150))
-    (is (about= 3333 (:grape (total-target-sum hist)) 150))
-    (is (about= 3333 (:apple (total-target-sum hist)) 150))))
+    (is (about= 3333 (:orange (:counts (total-target-sum hist))) 150))
+    (is (about= 3333 (:grape (:counts (total-target-sum hist))) 150))
+    (is (about= 3333 (:apple (:counts (total-target-sum hist))) 150))))
 
 (deftest group-test
   (let [points 10000
         hist (reduce (fn [h [x y]] (insert! h x y))
                      (create)
-                     (group-data points))
+                     (group-data points false))
         ext-sum (extended-sum hist 0.5)]
-    (is (about= (first (:target ext-sum))
+    (is (= (target-type hist) :group))
+    (is (= (group-types hist) '(:numeric :categorical)))
+    (is (about= (:sum (first (:target ext-sum)))
                 (/ points 4)
                 (/ points 100)))
-    (is (about= (:orange (second (:target ext-sum)))
+    (is (about= (:orange (:counts (second (:target ext-sum))))
                 (/ points 6)
                 (/ points 100)))))
 
@@ -143,7 +147,7 @@
   (let [points 10000
         hist1 (reduce (fn [h [x y]] (insert! h x y))
                      (create)
-                     (cat-data points))
+                     (cat-data points false))
         hist2 (reduce insert-bin! (create) (bins hist1))]
     (= (bins hist1) (bins hist2))))
 
@@ -157,3 +161,45 @@
                      (create :bins 3 :gap-weighted? true)
                      data)]
     (is (== (total-count hist) (count data)))))
+
+(deftest numeric-missing-test
+  (let [data [[1 1] [1 nil] [4 2] [6 nil]]
+        result (bins (reduce (partial apply insert-numeric!)
+                             (create :bins 2)
+                             data))]
+    (is (= result
+           '({:mean 1.0
+              :count 2
+              :target {:sum 1.0 :missing-count 1.0}}
+             {:mean 5.0
+              :count 2
+              :target {:sum 2.0 :missing-count 1.0}})))))
+
+(deftest categorical-missing-test
+  (let [data [[1 :foo] [1 nil] [4 :bar] [6 nil]]
+        result (bins (reduce (partial apply insert-categorical!)
+                             (create :bins 2 :categories [:foo :bar])
+                             data))]
+    (is (= result
+           '({:mean 1.0
+              :count 2
+              :target {:counts {:foo 1.0 :bar 0.0} :missing-count 1.0}}
+             {:mean 5.0
+              :count 2
+              :target {:counts {:foo 0.0 :bar 1.0} :missing-count 1.0}})))))
+
+(deftest group-missing-test
+  (let [points 10000
+        hist (reduce (fn [h [x y]] (insert! h x y))
+                     (create :bins 4 :group-types [:numeric :categorical])
+                     (group-data points true))
+        ext-sum (extended-sum hist 0.5)]
+    (is (about= (:sum (first (:target ext-sum)))
+                (/ points 4)
+                (/ points 50)))
+    (is (about= (:missing-count (second (:target ext-sum)))
+                (/ points 4)
+                (/ points 50)))
+    (is (about= (:orange (:counts (second (:target ext-sum))))
+                (/ points 12)
+                (/ points 50)))))

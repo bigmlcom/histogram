@@ -6,6 +6,16 @@
                                 MixedInsertException)
            (java.util HashMap ArrayList)))
 
+(def ^:private clj-to-java-types
+  {:none Histogram$TargetType/none
+   :numeric Histogram$TargetType/numeric
+   :categorical Histogram$TargetType/categorical
+   :group Histogram$TargetType/group})
+
+(def ^:private java-to-clj-types
+  (assoc (into {} (map (fn [[k v]] [v k]) clj-to-java-types))
+    nil :unset))
+
 (defn create
   "Creates a histogram.
 
@@ -13,9 +23,10 @@
      :bins - Maximum bins to be used by the histogram (default 64)
      :gap-weighted? - Use gap weighting (true or false - default false)
      :categories - Collection of valid categories (improves performance)"
-  [& {:keys [bins gap-weighted? categories]
+  [& {:keys [bins gap-weighted? categories group-types]
       :or {bins 64 gap-weighted? false}}]
-  (Histogram. bins gap-weighted? categories))
+  (let [group-types (when group-types (map clj-to-java-types group-types))]
+    (Histogram. bins gap-weighted? categories group-types)))
 
 (defn histogram?
   "Returns true if the input is a histogram."
@@ -23,14 +34,16 @@
   (instance? Histogram hist))
 
 (defn- java-target [target]
-  (cond (number? target)
-        (NumericTarget. target)
-        (map? target)
-        (MapCategoricalTarget. (HashMap. target))
-        (sequential? target)
-        (GroupTarget. (ArrayList. (map java-target target)))
-        (nil? target)
-        SimpleTarget/TARGET))
+  (let [target-val (or (:sum target) (:counts target))
+        missing-count (:missing-count target)]
+    (cond (number? target-val)
+          (NumericTarget. target-val missing-count)
+          (map? target-val)
+          (MapCategoricalTarget. (HashMap. target-val) missing-count)
+          (sequential? target-val)
+          (GroupTarget. (ArrayList. (map java-target target-val)))
+          (nil? target)
+          SimpleTarget/TARGET)))
 
 (defn- java-bin [bin]
   (let [{:keys [mean count target]} bin]
@@ -46,12 +59,13 @@
 (defn target-type
   "Returns the target-type of the histogram."
   [^Histogram hist]
-  (condp = (.getTargetType hist)
-    Histogram$TargetType/none :none
-    Histogram$TargetType/numeric :numeric
-    Histogram$TargetType/categorical :categorical
-    Histogram$TargetType/group :group
-    nil :unset))
+  (java-to-clj-types (.getTargetType hist)))
+
+(defn group-types
+  "Returns the group types of the histogram."
+  [^Histogram hist]
+  (when-let [group-types (.getGroupTypes hist)]
+    (map java-to-clj-types group-types)))
 
 (defn- value-type [v]
   (cond (nil? v) :none
@@ -72,6 +86,16 @@
   "Inserts a point with a categorical target into the histogram."
   [^Histogram hist p v]
   (.insertCategorical hist (double p) v))
+
+(defn insert-numeric!
+  "Inserts a point with a categorical target into the histogram."
+  [^Histogram hist p v]
+  (.insertNumeric hist (double p) (when v (double v))))
+
+(defn insert-group!
+  "Inserts a point with a group target into the histogram."
+  [^Histogram hist p v]
+  (.insertGroup hist (double p) v))
 
 (defmulti insert!
   "Inserts a point and an optional target into the histogram.  The
@@ -103,13 +127,16 @@
   nil)
 
 (defmethod scrub-target NumericTarget [^NumericTarget target]
-  (.getTarget target))
+  {:sum (.getTarget target)
+   :missing-count (.getMissingCount target)})
 
 (defmethod scrub-target MapCategoricalTarget [^MapCategoricalTarget target]
-  (into {} (.getCounts target)))
+  {:counts (dissoc (into {} (.getCounts target)) nil)
+   :missing-count (.getMissingCount target)})
 
 (defmethod scrub-target ArrayCategoricalTarget [^ArrayCategoricalTarget target]
-  (into {} (.getCounts target)))
+  {:counts (into {} (.getCounts target))
+   :missing-count (.getMissingCount target)})
 
 (defmethod scrub-target GroupTarget [^GroupTarget target]
   (map scrub-target (.getGroupTarget target)))
