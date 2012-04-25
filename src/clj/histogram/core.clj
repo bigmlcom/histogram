@@ -22,7 +22,9 @@
    Optional parameters:
      :bins - Maximum bins to be used by the histogram (default 64)
      :gap-weighted? - Use gap weighting (true or false - default false)
-     :categories - Collection of valid categories (improves performance)"
+     :categories - Collection of valid categories (improves performance)
+     :group-types - A sequence of types (:numeric or :categorical) that
+                    describing a group target."
   [& {:keys [bins gap-weighted? categories group-types]
       :or {bins 64 gap-weighted? false}}]
   (let [group-types (when group-types (map clj-to-java-types group-types))]
