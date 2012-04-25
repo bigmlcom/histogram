@@ -213,3 +213,10 @@
            {:count 3
             :target {:counts {:bar 1.0, :foo 1.0}
                      :missing-count 1.0}}))))
+
+(deftest missing-merge-test
+  (let [hist1 (insert! (create) nil 1)
+        hist2 (insert! (create) nil 2)
+        merged (merge! (merge! (create) hist1) hist2)]
+    (is (== 2 (:count (missing-bin merged))))
+    (is (== 3 (:sum (:target (missing-bin merged)))))))

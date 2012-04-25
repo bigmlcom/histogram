@@ -398,6 +398,7 @@ public class Histogram<T extends Target> {
         throw new MixedInsertException();
       }
     }
+    
     if (_indexMap != null && !_indexMap.equals(histogram._indexMap)) {
       throw new MixedInsertException();
     } else if (!histogram.getBins().isEmpty()) {
@@ -411,6 +412,14 @@ public class Histogram<T extends Target> {
       }
       mergeBins();
     }
+    
+    if (_missingTarget == null) {
+      _missingTarget = (T) histogram.getMissingTarget();
+    } else {
+      _missingTarget.sum(histogram.getMissingTarget());
+    }
+    _missingCount += histogram.getMissingCount();      
+
     return this;
   }
 
