@@ -53,8 +53,8 @@
   "Inserts a bin into the histogram."
   [^Histogram hist bin]
   (if (instance? Bin bin)
-    (.insert hist ^Bin bin)
-    (.insert hist ^Bin (java-bin bin))))
+    (.insertBin hist ^Bin bin)
+    (.insertBin hist ^Bin (java-bin bin))))
 
 (defn target-type
   "Returns the target-type of the histogram."
@@ -76,26 +76,30 @@
         :else :invalid))
 
 (defn- insert-type [hist _ & [v _]]
-  (let [hist-type (target-type hist)
-        value-type (value-type v)]
-    (cond (= hist-type :unset) value-type
-          (= hist-type value-type) hist-type
-          :else :mixed)))
+     (let [hist-type (target-type hist)
+           value-type (value-type v)]
+       (cond (= hist-type :unset) value-type
+             (nil? v) hist-type
+             (= hist-type value-type) hist-type
+             :else :mixed)))
+
+(defn- when-double [v]
+  (when v (double v)))
 
 (defn insert-categorical!
   "Inserts a point with a categorical target into the histogram."
   [^Histogram hist p v]
-  (.insertCategorical hist (double p) v))
+  (.insertCategorical hist (when-double p) v))
 
 (defn insert-numeric!
   "Inserts a point with a categorical target into the histogram."
   [^Histogram hist p v]
-  (.insertNumeric hist (double p) (when v (double v))))
+  (.insertNumeric hist (when-double p) (when-double v)))
 
 (defn insert-group!
   "Inserts a point with a group target into the histogram."
   [^Histogram hist p v]
-  (.insertGroup hist (double p) v))
+  (.insertGroup hist (when-double p) v))
 
 (defmulti insert!
   "Inserts a point and an optional target into the histogram.  The
@@ -103,17 +107,20 @@
    keyword, or collection of the previous targets."
   insert-type)
 
-(defmethod insert! :none [^Histogram hist p]
-  (.insert hist (double p)))
+(defmethod insert! :none
+  ([^Histogram hist p]
+     (.insert hist (when-double p)))
+  ([^Histogram hist p _]
+     (throw (Exception. "Unset histogram can't accept nil a target"))))
 
 (defmethod insert! :numeric [^Histogram hist p v]
-  (.insert hist (double p) (double v)))
+  (insert-numeric! hist p v))
 
 (defmethod insert! :categorical [^Histogram hist p v]
   (insert-categorical! hist p v))
 
 (defmethod insert! :group [^Histogram hist p v]
-  (.insert hist (double p) v))
+  (insert-group! hist p v))
 
 (defmethod insert! :mixed [_ & _]
   (throw (MixedInsertException.)))
@@ -213,6 +220,13 @@
   (let [^SumResult result (.extendedDensity hist (double p))]
     {:density (.getCount result)
      :target (scrub-target (.getTargetSum result))}))
+
+(defn missing-bin
+  "Retrieves information about inserts with missing input points."
+  [^Histogram hist]
+  (let [missing-map {:count (.getMissingCount hist)}
+        target (scrub-target (.getMissingTarget hist))]
+    (if target (assoc missing-map :target target) missing-map)))
 
 (defn bounds
   "Returns the bounds of the histogram, nil if the histogram is empty.

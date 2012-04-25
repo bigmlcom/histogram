@@ -58,7 +58,7 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   protected SimpleHistogramTarget clone() {
     Histogram<SimpleTarget> newHist = new Histogram<SimpleTarget>(_maxBins, true);
     for (Bin bin : _target.getBins()) {
-      newHist.insert(new Bin(bin));
+      newHist.insertBin(new Bin(bin));
     }
     return new SimpleHistogramTarget(_maxBins, newHist);
   }

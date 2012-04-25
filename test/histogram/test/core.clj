@@ -203,3 +203,13 @@
     (is (about= (:orange (:counts (second (:target ext-sum))))
                 (/ points 12)
                 (/ points 50)))))
+
+(deftest input-missing-test
+  (let [data [[1 :foo] [nil :bar] [4 :bar] [nil :foo] [nil nil]]
+        hist (reduce (partial apply insert-categorical!)
+                     (create :bins 2 :categories [:foo :bar])
+                     data)]
+    (is (= (missing-bin hist)
+           {:count 3
+            :target {:counts {:bar 1.0, :foo 1.0}
+                     :missing-count 1.0}}))))
