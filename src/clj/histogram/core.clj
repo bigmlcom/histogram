@@ -13,7 +13,7 @@
    :group Histogram$TargetType/group})
 
 (def ^:private java-to-clj-types
-  (assoc (into {} (map (fn [[k v]] [v k]) clj-to-java-types))
+  (assoc (zipmap (vals clj-to-java-types) (keys clj-to-java-types))
     nil :unset))
 
 (defn create
@@ -27,7 +27,7 @@
                     describing a group target."
   [& {:keys [bins gap-weighted? categories group-types]
       :or {bins 64 gap-weighted? false}}]
-  (let [group-types (when group-types (map clj-to-java-types group-types))]
+  (let [group-types (seq (map clj-to-java-types group-types))]
     (Histogram. bins gap-weighted? categories group-types)))
 
 (defn histogram?
