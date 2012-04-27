@@ -223,6 +223,11 @@
     {:density (.getCount result)
      :target (scrub-target (.getTargetSum result))}))
 
+(defn average-target
+  "Returns the average (or expected) target for the given point."
+  [^Histogram hist p]
+  (scrub-target (.averageTarget hist p)))
+
 (defn missing-bin
   "Retrieves information about inserts with missing input points."
   [^Histogram hist]
