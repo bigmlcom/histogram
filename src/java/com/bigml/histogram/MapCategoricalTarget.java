@@ -1,5 +1,6 @@
 package com.bigml.histogram;
 
+import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -13,12 +14,28 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
     _target.put(category, 1d);
   }
   
+  public MapCategoricalTarget(HashMap<Object, Double> targetCounts, double missingCount) {
+    _target = targetCounts;
+    _target.put(null, missingCount);
+  }
+
   public MapCategoricalTarget(HashMap<Object, Double> targetCounts) {
     _target = targetCounts;
   }
   
   public HashMap<Object, Double> getCounts() {
     return _target;
+  }
+
+  @Override
+  public double getMissingCount() {
+    Double missingCount = _target.get(null);
+    return missingCount == null ? 0 : missingCount;
+  }
+  
+  @Override
+  public TargetType getTargetType() {
+    return TargetType.categorical;
   }
   
   @Override

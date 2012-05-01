@@ -1,5 +1,6 @@
 package com.bigml.histogram;
 
+import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
@@ -26,7 +27,18 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   public Histogram<SimpleTarget> getTarget() {
     return _target;
   }
-  
+
+    /* Missing values not allowed for SimpleHistogramTarget */
+  @Override
+  public double getMissingCount() {
+    return 0;
+  }
+
+  @Override
+  public TargetType getTargetType() {
+    return Histogram.TargetType.histogram;
+  }
+
   @Override
   public String toString() {
     return _target.toString();
@@ -46,7 +58,7 @@ public class SimpleHistogramTarget extends Target<SimpleHistogramTarget> {
   protected SimpleHistogramTarget clone() {
     Histogram<SimpleTarget> newHist = new Histogram<SimpleTarget>(_maxBins, true);
     for (Bin bin : _target.getBins()) {
-      newHist.insert(new Bin(bin));
+      newHist.insertBin(new Bin(bin));
     }
     return new SimpleHistogramTarget(_maxBins, newHist);
   }

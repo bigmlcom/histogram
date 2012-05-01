@@ -19,7 +19,7 @@ public class HeatMap {
 
   public HeatMap insert(double x, double y) {
     SimpleHistogramTarget target = new SimpleHistogramTarget(_targetHistSize, y);
-    _hist.insert(new Bin<SimpleHistogramTarget>(x, 1, target));
+    _hist.insertBin(new Bin<SimpleHistogramTarget>(x, 1, target));
     return this;
   }
 
