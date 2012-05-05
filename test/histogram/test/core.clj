@@ -220,3 +220,12 @@
         merged (merge! (merge! (create) hist1) hist2)]
     (is (== 2 (:count (missing-bin merged))))
     (is (== 3 (:sum (:target (missing-bin merged)))))))
+
+(deftest missing-bin-test
+  (let [bin1 (-> (create)
+                 (insert-numeric! nil 3)
+                 (missing-bin))
+        bin2 (-> (create)
+                 (insert-bin! bin1)
+                 (missing-bin))]
+    (is (= bin1 bin2))))

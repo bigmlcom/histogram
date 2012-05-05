@@ -525,6 +525,19 @@ public class Histogram<T extends Target> {
     return _missingTarget;
   }
   
+  /**
+   * Inserts count and target information for missing inputs
+   */
+  public Histogram<T> insertMissing(long count, T target) {
+    if (_missingTarget == null) {
+      _missingTarget = (T) target;
+    } else {
+      _missingTarget.sum(target);
+    }
+   _missingCount += count;   
+   return this;
+  }
+
   private void checkType(TargetType newType) throws MixedInsertException {
     if (_targetType == null) {
       _targetType = newType;
@@ -535,12 +548,7 @@ public class Histogram<T extends Target> {
 
   private void processPointTarget(Double point, Target target) {
     if (point == null) {
-      if (_missingTarget == null) {
-        _missingTarget = (T) target;
-      } else {
-        _missingTarget.sum(target);
-      }
-      _missingCount++;
+      insertMissing(1, (T) target);
     } else {
       insertBin(new Bin(point, 1, target));
     }
