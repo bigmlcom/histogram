@@ -56,7 +56,9 @@
   [^Histogram hist bin]
   (if (instance? Bin bin)
     (.insertBin hist ^Bin bin)
-    (.insertBin hist ^Bin (java-bin bin))))
+    (if (:mean bin)
+      (.insertBin hist ^Bin (java-bin bin))
+      (.insertMissing hist (:count bin) (java-target (:target bin))))))
 
 (defn target-type
   "Returns the target-type of the histogram."
@@ -166,11 +168,6 @@
   [^Histogram hist]
   (scrub-target (.getTotalTargetSum hist)))
 
-(defn bins
-  "Returns the bins contained in the histogram."
-  [^Histogram hist]
-  (map scrub-bin (.getBins hist)))
-
 (defn merge!
   "Merges the second histogram into the first."
   [^Histogram hist1 ^Histogram hist2]
@@ -234,6 +231,15 @@
   (let [missing-map {:count (.getMissingCount hist)}
         target (scrub-target (.getMissingTarget hist))]
     (if target (assoc missing-map :target target) missing-map)))
+
+(defn bins
+  "Returns the bins contained in the histogram. A missing bin (mean is
+   nil) is included if it's non-empty."
+  [^Histogram hist]
+  (let [bins (map scrub-bin (.getBins hist))]
+    (if (pos? (.getMissingCount hist))
+      (conj bins (missing-bin hist))
+      bins)))
 
 (defn bounds
   "Returns the bounds of the histogram, nil if the histogram is empty.
