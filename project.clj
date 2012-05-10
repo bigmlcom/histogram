@@ -1,4 +1,4 @@
-(defproject histogram "1.9.1"
+(defproject histogram "1.9.2"
   :description "Dynamic/streaming histograms"
   :source-path "src/clj"
   :java-source-path "src/java"

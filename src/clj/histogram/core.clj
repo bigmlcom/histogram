@@ -241,6 +241,16 @@
       (conj bins (missing-bin hist))
       bins)))
 
+(defn minimum
+  "Returns the minimum value inserted into the histogram."
+  [^Histogram hist]
+  (.getMinimum hist))
+
+(defn maximum
+  "Returns the maximum value inserted into the histogram."
+  [^Histogram hist]
+  (.getMaximum hist))
+
 (defn bounds
   "Returns the bounds of the histogram, nil if the histogram is empty.
    An optional parameter may be supplied to enable a small buffer to
