@@ -238,4 +238,21 @@
                      (create)
                      (repeatedly 1000 #(rand-int 10)))]
     (is (== 0 (minimum hist)))
-    (is (== 9 (maximum hist)))))
+    (is (== 9 (maximum hist))))
+  (let [hist1 (reduce insert! (create) (range 0 4))
+        hist2 (reduce insert! (create) (range 2 6))
+        merged (-> (create) (merge! hist1) (merge! hist2))]
+    (is (== 0 (minimum merged)))
+    (is (== 5 (maximum merged)))))
+
+(deftest transform-test
+  (let [hist1 (reduce (fn [h [x y]] (insert! h x y))
+                      (create :bins 8 :gap-weighted? true
+                              :categories [:apple :orange :grape])
+                      (cat-data 1000 false))
+        hist1 (insert! hist1 nil :apple)
+        hist2 (clj-to-hist (hist-to-clj hist1))]
+    (is (= (bins hist1) (bins hist2)))
+    (is (= (missing-bin hist1) (missing-bin hist2)))
+    (is (= (minimum hist1) (minimum hist2)))
+    (is (= (maximum hist1) (maximum hist2)))))
