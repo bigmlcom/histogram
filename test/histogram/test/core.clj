@@ -229,3 +229,13 @@
                  (insert-bin! bin1)
                  (missing-bin))]
     (is (= bin1 bin2))))
+
+(deftest min-max-test
+  (let [hist (create)]
+    (is (nil? (minimum hist)))
+    (is (nil? (maximum hist))))
+  (let [hist (reduce insert!
+                     (create)
+                     (repeatedly 1000 #(rand-int 10)))]
+    (is (== 0 (minimum hist)))
+    (is (== 9 (maximum hist)))))

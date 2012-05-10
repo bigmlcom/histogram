@@ -49,6 +49,8 @@ public class Histogram<T extends Target> {
     _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
     _countWeightedGaps = countWeightedGaps;
     _missingCount = 0;
+    _minimum = null;
+    _maximum = null;
 
     if (categories != null && !categories.isEmpty()) {
       _targetType = TargetType.categorical;
@@ -550,6 +552,20 @@ public class Histogram<T extends Target> {
    _missingCount += count;
    return this;
   }
+  
+  /**
+   * Returns the minimum value inserted into the histogram.
+   */
+  public Double getMinimum() {
+    return _minimum;
+  }
+
+  /**
+   * Returns the maximum value inserted into the histogram.
+   */
+  public Double getMaximum() {
+    return _maximum;
+  }
 
   private void checkType(TargetType newType) throws MixedInsertException {
     if (_targetType == null) {
@@ -563,6 +579,13 @@ public class Histogram<T extends Target> {
     if (point == null) {
       insertMissing(1, (T) target);
     } else {
+      if (_minimum == null || _minimum > point) {
+        _minimum = point;
+      }
+      if (_maximum == null || _maximum < point) {
+        _maximum = point;
+      }
+        
       insertBin(new Bin(point, 1, target));
     }
   }
@@ -759,4 +782,6 @@ public class Histogram<T extends Target> {
   private HashMap<Object, Integer> _indexMap;
   private long _missingCount;
   private T _missingTarget;
+  private Double _minimum;
+  private Double _maximum;
 }
