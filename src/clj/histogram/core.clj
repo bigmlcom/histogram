@@ -236,10 +236,7 @@
   "Returns the bins contained in the histogram. A missing bin (mean is
    nil) is included if it's non-empty."
   [^Histogram hist]
-  (let [bins (map scrub-bin (.getBins hist))]
-    (if (pos? (.getMissingCount hist))
-      (conj bins (missing-bin hist))
-      bins)))
+  (map scrub-bin (.getBins hist)))
 
 (defn minimum
   "Returns the minimum value inserted into the histogram."
@@ -266,3 +263,33 @@
             :max (+ l-mean (* 1.1 (- l-mean (:mean (last (drop-last bins))))))}
            {:min f-mean
             :max l-mean})))))
+
+(defn hist-to-clj
+  "Transforms a Histogram object into a Clojure map representing the
+  histogram."
+  [^Histogram hist]
+  (into {} (remove (comp nil? second)
+                   {:max-bins (.getMaxBins hist)
+                    :gap-weighted? (.isCountWeightedGaps hist)
+                    :group-types (seq (.getGroupTypes hist))
+                    :categories (seq (.getTargetCategories hist))
+                    :bins (bins hist)
+                    :missing-bin (when (pos? (.getMissingCount hist))
+                                   (missing-bin hist))
+                    :minimum (minimum hist)
+                    :maximum (maximum hist)})))
+
+(defn clj-to-hist
+  "Transforms a Clojure map representing a histogram into a Histogram
+  object."
+  [hist-map]
+  (let [{:keys [max-bins gap-weighted? group-types categories bins
+                missing-bin maximum minimum]} hist-map
+        hist (create :bins max-bins :gap-weighted? gap-weighted?
+                     :group-types group-types :categories categories)]
+    (doseq [bin bins]
+      (insert-bin! hist bin))
+    (when minimum (.setMinimum hist minimum))
+    (when maximum (.setMaximum hist maximum))
+    (when missing-bin (insert-bin! hist missing-bin))
+    hist))

@@ -2,6 +2,8 @@ package com.bigml.histogram;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -218,7 +220,6 @@ public class Histogram<T extends Target> {
     return _targetType;
   }
 
-
   /**
    * Returns the target types for a group histogram
    */
@@ -226,6 +227,36 @@ public class Histogram<T extends Target> {
     return _groupTypes;
   }
 
+  /**
+   * Returns the maximum number of allowed bins.
+   */
+  public int getMaxBins() {
+    return _maxBins;
+  }
+  
+  /**
+   * Returns whether gaps are count weighted.
+   */
+  public boolean isCountWeightedGaps() {
+    return _countWeightedGaps;
+  }
+  
+  /**
+   * Returns the categories for an array-backed
+   * categorical histogram
+   */
+  public List<Object> getTargetCategories() {
+    List<Object> categories = null;
+    if (_indexMap != null) {
+      Object[] catArray = new Object[_indexMap.size()];
+      for (Entry<Object, Integer> entry : _indexMap.entrySet()) {
+        catArray[entry.getValue()] = entry.getKey();
+      }
+      categories = Arrays.asList(catArray);
+    }
+    return categories;
+  }
+  
   /**
    * Returns the approximate number of points less than
    * <code>p</code>.
@@ -472,6 +503,18 @@ public class Histogram<T extends Target> {
       mergeBins();
     }
 
+    if (_minimum == null) {
+      _minimum = histogram.getMinimum();
+    } else if (histogram.getMinimum() != null){
+      _minimum = Math.min(_minimum, histogram.getMinimum());
+    }
+
+    if (_maximum == null) {
+      _maximum = histogram.getMaximum();
+    } else if (histogram.getMaximum() != null){
+      _maximum = Math.max(_maximum, histogram.getMaximum());
+    }
+
     if (_missingTarget == null) {
       _missingTarget = (T) histogram.getMissingTarget();
     } else {
@@ -567,6 +610,30 @@ public class Histogram<T extends Target> {
     return _maximum;
   }
 
+  /**
+   * Sets the minimum input value for the histogram. This
+   * method should only be used for histograms created
+   * by inserting pre-existing bins.
+   *
+   * @param minimum the minimum value observed by the histogram
+   */
+  public Histogram setMinimum(Double minimum) {
+    _minimum = minimum;
+    return this;
+  }
+
+  /**
+   * Sets the maximum input value for the histogram. This
+   * method should only be used for histograms created
+   * by inserting pre-existing bins.
+   *
+   * @param maximum the maximum value observed by the histogram
+   */
+  public Histogram setMaximum(Double maximum) {
+    _maximum = maximum;
+    return this;
+  }
+  
   private void checkType(TargetType newType) throws MixedInsertException {
     if (_targetType == null) {
       _targetType = newType;
