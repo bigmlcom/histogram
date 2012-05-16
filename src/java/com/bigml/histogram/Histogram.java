@@ -233,14 +233,14 @@ public class Histogram<T extends Target> {
   public int getMaxBins() {
     return _maxBins;
   }
-  
+
   /**
    * Returns whether gaps are count weighted.
    */
   public boolean isCountWeightedGaps() {
     return _countWeightedGaps;
   }
-  
+
   /**
    * Returns the categories for an array-backed
    * categorical histogram
@@ -256,7 +256,7 @@ public class Histogram<T extends Target> {
     }
     return categories;
   }
-  
+
   /**
    * Returns the approximate number of points less than
    * <code>p</code>.
@@ -517,7 +517,7 @@ public class Histogram<T extends Target> {
 
     if (_missingTarget == null) {
       _missingTarget = (T) histogram.getMissingTarget();
-    } else {
+    } else if (histogram.getMissingTarget() != null) {
       _missingTarget.sum(histogram.getMissingTarget());
     }
     _missingCount += histogram.getMissingCount();
@@ -595,7 +595,7 @@ public class Histogram<T extends Target> {
    _missingCount += count;
    return this;
   }
-  
+
   /**
    * Returns the minimum value inserted into the histogram.
    */
@@ -633,7 +633,7 @@ public class Histogram<T extends Target> {
     _maximum = maximum;
     return this;
   }
-  
+
   private void checkType(TargetType newType) throws MixedInsertException {
     if (_targetType == null) {
       _targetType = newType;
@@ -652,7 +652,7 @@ public class Histogram<T extends Target> {
       if (_maximum == null || _maximum < point) {
         _maximum = point;
       }
-        
+
       insertBin(new Bin(point, 1, target));
     }
   }
