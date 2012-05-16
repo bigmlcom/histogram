@@ -215,6 +215,8 @@
                      :missing-count 1.0}}))))
 
 (deftest missing-merge-test
+  (is (merge! (insert-numeric! (create :bins 8) nil 4)
+              (create :bins 8)))
   (let [hist1 (insert! (create) nil 1)
         hist2 (insert! (create) nil 2)
         merged (merge! (merge! (create) hist1) hist2)]
