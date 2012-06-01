@@ -275,14 +275,35 @@ public class Histogram<T extends Target> {
    * @param p the sum point
    */
   public SumResult<T> extendedSum(double p) throws SumOutOfRangeException {
-    SumResult<T> result = null;
+    SumResult<T> result;
+    
+    if (_bins.isEmpty()) {
+      throw new SumOutOfRangeException("Cannot sum with an empty histogram.");
+    }
 
     double min = _bins.firstKey();
     double max = _bins.lastKey();
 
-    if (p < min || p > max) {
-      throw new SumOutOfRangeException("Sum point " + p + " should be between "
-              + min + " and " + max);
+    if (p < min) {
+      Bin<T> bin = _bins.firstEntry().getValue();
+      double distanceRatio = (1 - (bin.getMean() - p) / binGapRange(p, bin)) / 2;
+      if (distanceRatio > 0) {
+        double countSum = distanceRatio * bin.getCount();
+        T targetSum = (T) bin.getTarget().clone().mult(distanceRatio);
+        result = new SumResult<T>(countSum, targetSum);
+      } else {
+        result = new SumResult<T>(0, (T) bin.getTarget().init());
+      }
+    } else if (p > max) {
+      Bin<T> bin = _bins.lastEntry().getValue();
+      double distanceRatio = (1 - (p - bin.getMean()) / binGapRange(p, bin)) / 2;
+      if (distanceRatio > 0) {
+        double countSum = getTotalCount() - distanceRatio * bin.getCount();
+        T targetSum = (T) getTotalTargetSum().sum(bin.getTarget().clone().mult(-distanceRatio));
+        result = new SumResult<T>(countSum, targetSum);
+      } else {
+        result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
+      }      
     } else if (p == max) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
