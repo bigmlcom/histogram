@@ -259,8 +259,8 @@
        (let [l-mean (:mean (last bins))
              f-mean (:mean (first bins))]
          (if (and buffer? (second bins))
-           {:min (- f-mean (* 1.1 (- (:mean (second bins)) f-mean)))
-            :max (+ l-mean (* 1.1 (- l-mean (:mean (last (drop-last bins))))))}
+           {:min (- f-mean (apply - (map :mean (reverse (take 2 bins)))))
+            :max (+ l-mean (apply - (map :mean (reverse (take-last 2 bins)))))}
            {:min f-mean
             :max l-mean})))))
 
@@ -293,3 +293,35 @@
     (when maximum (.setMaximum hist maximum))
     (when missing-bin (insert-bin! hist missing-bin))
     hist))
+
+(defn mean
+  "Returns the mean over the points inserted into the histogram."
+  [^Histogram hist]
+  (:mean (first (-> (create :bins 1)
+                    (merge! hist)
+                    (bins)))))
+
+(defn cdf
+  "Returns the cumulative distribution function for histogram."
+  [^Histogram hist]
+  (let [total (total-count hist)]
+    #(/ (sum hist %) total)))
+
+(defn pdf
+  "Returns the probability density function for the histogram."
+  [^Histogram hist]
+  (let [total (total-count hist)]
+    #(/ (density hist %) total)))
+
+(defn variance
+  "Returns an estimate of the variance for the histogram."
+  [^Histogram hist]
+  (let [h-mean (mean hist)
+        h-count (total-count hist)]
+    (when (pos? h-count)
+      (/ (reduce (fn [v {:keys [mean count]}]
+                   (let [diff (- mean h-mean)]
+                     (+ v (* count diff diff))))
+                 0
+                 (bins hist))
+         h-count))))

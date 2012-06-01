@@ -32,11 +32,13 @@
                 (/ points 2)
                 (/ points 50)))))
 
-(deftest median-test
+(deftest median-mean-test
   (let [points 10000]
     (is (about= (median (reduce insert! (create) (rand-data points)))
                 0.5 0.05))
     (is (about= (median (reduce insert! (create) (normal-data points)))
+                0 0.05))
+    (is (about= (mean (reduce insert! (create) (normal-data points)))
                 0 0.05))))
 
 (deftest mean-test
@@ -258,3 +260,7 @@
     (is (= (missing-bin hist1) (missing-bin hist2)))
     (is (= (minimum hist1) (minimum hist2)))
     (is (= (maximum hist1) (maximum hist2)))))
+
+(deftest variance-test
+  (is (about= (variance (reduce insert! (create) (normal-data 10000)))
+              1 0.05)))
