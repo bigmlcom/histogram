@@ -264,3 +264,6 @@
 (deftest variance-test
   (is (about= (variance (reduce insert! (create) (normal-data 10000)))
               1 0.05)))
+
+(deftest negative-zero-test
+  (is (= 1 (count (bins (reduce insert! (create) [0.0 -0.0]))))))
