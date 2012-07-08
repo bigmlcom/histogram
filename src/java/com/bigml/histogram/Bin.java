@@ -4,13 +4,18 @@ import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
 public class Bin<T extends Target> {
-    
+
   public Bin(double mean, double count, T target) {
-    _mean = mean;
+    /* Hack to avoid Java's negative zero */
+    if (mean == 0d) {
+      _mean = 0d;
+    } else {
+      _mean = mean;
+    }
     _count = count;
     _target = target;
   }
-  
+
   public Bin(Bin<T> bin) {
     this(bin.getMean(), bin.getCount(), (T) bin.getTarget().clone());
   }
@@ -30,7 +35,7 @@ public class Bin<T extends Target> {
   public double getMean() {
     return _mean;
   }
-    
+
   public double getWeight() {
     return _mean * (double) _count;
   }
@@ -43,7 +48,7 @@ public class Bin<T extends Target> {
     if (_mean != bin.getMean()) {
       throw new BinUpdateException("Bins must have matching means to update");
     }
-    
+
     _count += bin.getCount();
     _target.sum(bin.getTarget());
   }
@@ -52,7 +57,7 @@ public class Bin<T extends Target> {
     if (_mean != bin.getMean()) {
       throw new BinUpdateException("Bins must have matching means to update");
     }
-    
+
     _count = bin.getCount();
     _target = (T) bin.getTarget();
   }
@@ -61,7 +66,7 @@ public class Bin<T extends Target> {
   public String toString() {
     return toJSON(new DecimalFormat(Histogram.DEFAULT_FORMAT_STRING)).toJSONString();
   }
-  
+
   public Bin combine(Bin<T> bin) {
     double count = getCount() + bin.getCount();
     double mean = (getWeight() + bin.getWeight()) / (double) count;
