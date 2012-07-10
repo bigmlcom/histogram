@@ -342,6 +342,24 @@ examples> (-> (hst/create :group-types [:categorical :numeric])
   :mean 3.0, :count 1})
 ```
 
+# Freezing a Histogram
+
+While the ability to adapt to non-stationary data streams is a
+strength of the histograms, it is also computationally expensive. If
+your data stream is stationary, you can increase the histogram's
+performance by setting the `:freeze` parameter. After the number of
+inserts into the histogram have exceeded the `:freeze` parameter, the
+histogram bins are locked into place. As the bin means no longer
+shift, inserts become computationally cheap. However the quality of
+the histogram can suffer if the `:freeze` parameter is too small.
+
+```clojure
+examples> (time (reduce hst/insert! (hst/create) ex/normal-data))
+"Elapsed time: 391.857 msecs"
+examples> (time (reduce hst/insert! (hst/create :freeze 1024) ex/normal-data))
+"Elapsed time: 99.92 msecs"
+```
+
 # Performance
 
 Insert time scales `log(n)` with respect to the number of bins in the

@@ -267,3 +267,11 @@
 
 (deftest negative-zero-test
   (is (= 1 (count (bins (reduce insert! (create) [0.0 -0.0]))))))
+
+(deftest freeze-test
+  (let [points 100000
+        hist (reduce insert! (create :freeze 500) (normal-data points))]
+    (is (about= (sum hist 0) (/ points 2) (/ points 50)))
+    (is (about= (median hist) 0 0.05))
+    (is (about= (mean hist) 0 0.05))
+    (is (about= (variance hist) 1 0.05))))

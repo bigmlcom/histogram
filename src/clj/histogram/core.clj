@@ -24,11 +24,13 @@
      :gap-weighted? - Use gap weighting (true or false - default false)
      :categories - Collection of valid categories (improves performance)
      :group-types - A sequence of types (:numeric or :categorical) that
-                    describing a group target."
-  [& {:keys [bins gap-weighted? categories group-types]
+                    describing a group target.
+     :freeze - After this # of inserts, bin locations will 'freeze',
+               improving the performance of future inserts."
+  [& {:keys [bins gap-weighted? categories group-types freeze]
       :or {bins 64 gap-weighted? false}}]
   (let [group-types (seq (map clj-to-java-types group-types))]
-    (Histogram. bins gap-weighted? categories group-types)))
+    (Histogram. bins gap-weighted? categories group-types freeze)))
 
 (defn histogram?
   "Returns true if the input is a histogram."
@@ -271,6 +273,7 @@
   (into {} (remove (comp nil? second)
                    {:max-bins (.getMaxBins hist)
                     :gap-weighted? (.isCountWeightedGaps hist)
+                    :freeze (.getFreezeThreshold hist)
                     :group-types (seq (.getGroupTypes hist))
                     :categories (seq (.getTargetCategories hist))
                     :bins (bins hist)
@@ -283,10 +286,11 @@
   "Transforms a Clojure map representing a histogram into a Histogram
   object."
   [hist-map]
-  (let [{:keys [max-bins gap-weighted? group-types categories bins
-                missing-bin maximum minimum]} hist-map
+  (let [{:keys [max-bins gap-weighted? freeze group-types categories
+                bins missing-bin maximum minimum]} hist-map
         hist (create :bins max-bins :gap-weighted? gap-weighted?
-                     :group-types group-types :categories categories)]
+                     :freeze freeze :group-types group-types
+                     :categories categories)]
     (doseq [bin bins]
       (insert-bin! hist bin))
     (when minimum (.setMinimum hist minimum))
