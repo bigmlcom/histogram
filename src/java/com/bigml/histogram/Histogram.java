@@ -41,18 +41,25 @@ public class Histogram<T extends Target> {
    * @param categories if the histogram uses categorical targets
    * then a collection of the possible category targets may be
    * provided to increase performance
+   * @param groups if the histogram uses a group target
+   * then a collection group target types may be provided
+   * @param freezeThreshold after this # of inserts, bin locations
+   * will 'freeze', increasing the performance of future inserts
    */
   public Histogram(int maxBins, boolean countWeightedGaps,
-          Collection<Object> categories, Collection<TargetType> groupTypes) {
+          Collection<Object> categories, Collection<TargetType> groupTypes,
+          Long freezeThreshold) {
     _maxBins = maxBins;
     _bins = new TreeMap<Double, Bin<T>>();
     _gaps = new TreeSet<Gap<T>>();
     _binsToGaps = new HashMap<Double, Gap<T>>();
     _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
     _countWeightedGaps = countWeightedGaps;
+    _totalCount = 0;
     _missingCount = 0;
     _minimum = null;
     _maximum = null;
+    _freezeThreshold = freezeThreshold;
 
     if (categories != null && !categories.isEmpty()) {
       _targetType = TargetType.categorical;
@@ -79,7 +86,7 @@ public class Histogram<T extends Target> {
    * @param countWeightedGaps true if count weighted gaps are desired
    */
   public Histogram(int maxBins, boolean countWeightedGaps) {
-    this(maxBins, countWeightedGaps, null, null);
+    this(maxBins, countWeightedGaps, null, null, null);
   }
 
   /**
@@ -235,12 +242,19 @@ public class Histogram<T extends Target> {
   }
 
   /**
+   * Returns the freeze threshold.
+   */
+  public Long getFreezeThreshold() {
+    return _freezeThreshold;
+  }
+
+  /**
    * Returns whether gaps are count weighted.
    */
   public boolean isCountWeightedGaps() {
     return _countWeightedGaps;
   }
-
+  
   /**
    * Returns the categories for an array-backed
    * categorical histogram
@@ -542,7 +556,7 @@ public class Histogram<T extends Target> {
       _missingTarget.sum(histogram.getMissingTarget());
     }
     _missingCount += histogram.getMissingCount();
-
+    _totalCount += histogram.getMissingCount();
     return this;
   }
 
@@ -550,11 +564,7 @@ public class Histogram<T extends Target> {
    * Returns the total number of points in the histogram.
    */
   public double getTotalCount() {
-    double count = 0;
-    for (Bin<T> bin : _bins.values()) {
-      count += bin.getCount();
-    }
-    return count;
+    return _totalCount;
   }
 
   /**
@@ -679,14 +689,30 @@ public class Histogram<T extends Target> {
   }
 
   private void updateBins(Bin<T> bin) {
+    _totalCount += bin.getCount();
     Bin<T> existingBin = _bins.get(bin.getMean());
-    if (existingBin != null) {
-      try {
-        existingBin.sumUpdate(bin);
-        if (_countWeightedGaps) {
-          updateGaps(existingBin);
-        }
-      } catch (BinUpdateException ex) {
+    if (_freezeThreshold != null 
+            && _totalCount > _freezeThreshold
+            && _bins.size() == _maxBins) {
+      Double floorDiff = Double.MAX_VALUE;
+      Entry<Double, Bin<T>> floorEntry = _bins.floorEntry(bin.getMean());
+      if (floorEntry != null) {
+        floorDiff = Math.abs(floorEntry.getValue().getMean() - bin.getMean());
+      }
+      Double ceilDiff = Double.MAX_VALUE;
+      Entry<Double, Bin<T>> ceilEntry = _bins.ceilingEntry(bin.getMean());
+      if (ceilEntry != null) {
+        ceilDiff = Math.abs(ceilEntry.getValue().getMean() - bin.getMean());
+      }
+      if (floorDiff <= ceilDiff) {
+        floorEntry.getValue().sumUpdate(bin);
+      } else {
+        ceilEntry.getValue().sumUpdate(bin);
+      }
+    } else if (existingBin != null) {
+      existingBin.sumUpdate(bin);
+      if (_countWeightedGaps) {
+        updateGaps(existingBin);
       }
     } else {
        updateGaps(bin);
@@ -868,8 +894,10 @@ public class Histogram<T extends Target> {
   private final boolean _countWeightedGaps;
   private ArrayList<TargetType> _groupTypes;
   private HashMap<Object, Integer> _indexMap;
+  private long _totalCount;
   private long _missingCount;
   private T _missingTarget;
   private Double _minimum;
   private Double _maximum;
+  private Long _freezeThreshold;
 }
