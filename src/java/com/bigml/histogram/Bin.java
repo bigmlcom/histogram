@@ -81,20 +81,13 @@ public class Bin<T extends Target> {
       return false;
     }
     final Bin<T> other = (Bin<T>) obj;
-    if (Double.doubleToLongBits(this._mean) != Double.doubleToLongBits(other._mean)) {
-      return false;
-    }
-    if (Double.doubleToLongBits(this._count) != Double.doubleToLongBits(other._count)) {
-      return false;
-    }
-    return true;
+    return Double.doubleToLongBits(_mean) == Double.doubleToLongBits(other._mean);
   }
 
   @Override
   public int hashCode() {
-    int hash = 7;
-    hash = 71 * hash + (int) (Double.doubleToLongBits(this._mean) ^ (Double.doubleToLongBits(this._mean) >>> 32));
-    hash = 71 * hash + (int) (Double.doubleToLongBits(this._count) ^ (Double.doubleToLongBits(this._count) >>> 32));
+    int hash = 3;
+    hash = 97 * hash + (int) (Double.doubleToLongBits(_mean) ^ (Double.doubleToLongBits(_mean) >>> 32));
     return hash;
   }
 

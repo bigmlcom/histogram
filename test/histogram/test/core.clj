@@ -275,3 +275,12 @@
     (is (about= (median hist) 0 0.05))
     (is (about= (mean hist) 0 0.05))
     (is (about= (variance hist) 1 0.05))))
+
+(deftest correct-counts
+  (let [data [605 760 610 615 605 780 605 905]
+        hist (reduce insert!
+                     (create :bins 4 :gap-weighted? true)
+                     data)]
+    (is (== (count data)
+            (total-count hist)
+            (reduce + (map :count (bins hist)))))))
