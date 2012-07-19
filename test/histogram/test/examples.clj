@@ -16,6 +16,15 @@
              (charts/function-plot (hst/pdf (first hists)) min max)
              (next hists)))))
 
+(defn multi-density-chart [hists]
+  (let [min (reduce min (map (comp :min hst/bounds) hists))
+        max (reduce max (map (comp :max hst/bounds) hists))]
+    (core/view
+     (reduce (fn [c h]
+               (charts/add-function c #(hst/density h %) min max))
+             (charts/function-plot #(hst/density (first hists) %) min max)
+             (next hists)))))
+
 (defn sum-density-chart [hist]
   (let [{:keys [min max]} (hst/bounds hist true)]
     (core/view (-> (charts/function-plot #(hst/sum hist %) min max)

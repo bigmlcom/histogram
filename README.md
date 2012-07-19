@@ -31,25 +31,25 @@ sequence of 100K samples from a normal distribution (mean 0, variance
 
 ```clojure
 user> (ns examples
-       (:require (histogram [core :as hst])
-                 (histogram.test [examples :as ex])))
-examples> (def hist (reduce hst/insert! (hst/create) ex/normal-data))
+        (:use [histogram.core])
+        (:require (histogram.test [examples :as ex])))
+examples> (def hist (reduce insert! (create) ex/normal-data))
 ```
 
 You can use the `sum` fn to find the approximate number of points less
 than a given threshold:
 
 ```clojure
-examples> (hst/sum hist 0)
-50044.02331806754
+examples> (sum hist 0)
+50044.02331
 ```
 
 The `density` fn gives us an estimate of the point density at the
 given location:
 
 ```clojure
-examples> (hst/density hist 0)
-39687.562791977114
+examples> (density hist 0)
+39687.56279
 ```
 
 The `uniform` fn returns a list of points that separate the
@@ -57,8 +57,8 @@ distribution into equal population areas.  Here's an example that
 produces quartiles:
 
 ```clojure
-examples> (hst/uniform hist 4)
-(-0.6723425970050285 -0.0011145378611749357 0.6713314937601746)
+examples> (uniform hist 4)
+(-0.67234 -0.00111 0.67133)
 ```
 
 We can plot the sums and density estimates as functions.  The red line
@@ -71,7 +71,7 @@ function](http://en.wikipedia.org/wiki/Probability_density_function)
 for the normal distribution.
 
 ```clojure
-examples> (ex/sum-density-chart hist)
+examples> (ex/sum-density-chart hist) ;; also see (ex/cdf-pdf-chart hist)
 ```
 ![Histogram from normal distribution]
 (https://img.skitch.com/20120427-jhrhpshfm6pppu3t3bu4kt9g7e.png)
@@ -85,13 +85,13 @@ points are distributed evenly with half the points less than the mean
 and half greater. This explains the fraction sum in the example below:
 
 ```clojure
-examples> (def hist (-> (hst/create :bins 3)
-                        (hst/insert! 1)
-                        (hst/insert! 2)
-                        (hst/insert! 3)))
-examples> (hst/bins hist)
+examples> (def hist (-> (create :bins 3)
+                        (insert! 1)
+                        (insert! 2)
+                        (insert! 3)))
+examples> (bins hist)
 ({:mean 1.0, :count 1} {:mean 2.0, :count 1} {:mean 3.0, :count 1})
-examples> (hst/sum hist 2)
+examples> (sum hist 2)
 1.5
 ```
 
@@ -102,7 +102,7 @@ fourth unique value it will create a fourth bin and then merge the
 nearest two.
 
 ```clojure
-examples> (hst/bins (hst/insert! hist 0.5))
+examples> (bins (insert! hist 0.5))
 ({:mean 0.75, :count 2} {:mean 2.0, :count 1} {:mean 3.0, :count 1})
 ```
 
@@ -112,12 +112,12 @@ red line represents a histogram with 16 bins and the blue line
 represents 64 bins.
 
 ```clojure
-examples> (ex/multi-density-chart
-           [(reduce hst/insert! (hst/create :bins 16) ex/normal-data)
-            (reduce hst/insert! (hst/create :bins 64) ex/normal-data)])
+examples> (ex/multi-pdf-chart
+           [(reduce insert! (create :bins 16) ex/normal-data)
+            (reduce insert! (create :bins 64) ex/normal-data)])
 ```
 ![64 and 32 bins histograms]
-(https://img.skitch.com/20120427-1x2fdrd7k5ks4rr9w59wkks7g.png)
+(https://img.skitch.com/20120719-e9hhw8hu6ye74b8stg1fh8tyhf.png)
 
 Another option when creating a histogram is to use *gap
 weighting*. When `:gap-weighted?` is true, the histogram is encouraged
@@ -125,18 +125,18 @@ to spend more of its bins capturing the densest areas of the
 distribution. For the normal distribution that means better resolution
 near the mean and less resolution near the tails. The chart below
 shows a histogram without gap weighting in blue and with gap weighting
-in red.  Near the center of the distribution, red uses five bins in
+in red.  Near the center of the distribution, red uses six bins in
 roughly the same space that blue uses three.
 
 ```clojure
-examples> (ex/multi-density-chart
-           [(reduce hst/insert! (hst/create :bins 16 :gap-weighted? true)
+examples> (ex/multi-pdf-chart
+           [(reduce insert! (create :bins 16 :gap-weighted? true)
                     ex/normal-data)
-            (reduce hst/insert! (hst/create :bins 16 :gap-weighted? false)
+            (reduce insert! (create :bins 16 :gap-weighted? false)
                     ex/normal-data)])
 ```
 ![Gap weighting vs. No gap weighting]
-(https://img.skitch.com/20120427-x7591npy3393iqs2k2cqfrr5hn.png)
+(https://img.skitch.com/20120719-e82yxgkph9te4fucc5yuktfy1m.png)
 
 # Merging
 
@@ -146,11 +146,11 @@ combined to give a better overall picture.
 
 ```clojure
 examples> (let [samples (partition 1000 ex/normal-data)
-                hist1 (reduce hst/insert! (hst/create :bins 16) (first samples))
-                hist2 (reduce hst/insert! (hst/create :bins 16) (second samples))
-                merged (-> (hst/create :bins 16)
-                           (hst/merge! hist1)
-                           (hst/merge! hist2))]
+                hist1 (reduce insert! (create :bins 16) (first samples))
+                hist2 (reduce insert! (create :bins 16) (second samples))
+                merged (-> (create :bins 16)
+                           (merge! hist1)
+                           (merge! hist2))]
             (ex/multi-density-chart [hist1 hist2 merged]))
 ```
 ![Merged histograms]
@@ -169,21 +169,21 @@ contain information summarizing the target. For numerics the targets
 sums are tracked.  For categoricals a map of counts is maintained.
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! 1 9)
-              (hst/insert! 2 8)
-              (hst/insert! 3 7)
-              (hst/insert! 3 6)
-              (hst/bins))
+examples> (-> (create)
+              (insert! 1 9)
+              (insert! 2 8)
+              (insert! 3 7)
+              (insert! 3 6)
+              (bins))
 ({:target {:sum 9.0, :missing-count 0.0}, :mean 1.0, :count 1}
  {:target {:sum 8.0, :missing-count 0.0}, :mean 2.0, :count 1}
  {:target {:sum 13.0, :missing-count 0.0}, :mean 3.0, :count 2})
-examples> (-> (hst/create)
-              (hst/insert! 1 :a)
-              (hst/insert! 2 :b)
-              (hst/insert! 3 :c)
-              (hst/insert! 3 :d)
-              (hst/bins))
+examples> (-> (create)
+              (insert! 1 :a)
+              (insert! 2 :b)
+              (insert! 3 :c)
+              (insert! 3 :d)
+              (bins))
 ({:target {:counts {:a 1.0}, :missing-count 0.0}, :mean 1.0, :count 1}
  {:target {:counts {:b 1.0}, :missing-count 0.0}, :mean 2.0, :count 1}
  {:target {:counts {:d 1.0, :c 1.0}, :missing-count 0.0}, :mean 3.0, :count 2})
@@ -192,9 +192,9 @@ examples> (-> (hst/create)
 Mixing target types isn't allowed:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! 1 :a)
-              (hst/insert! 2 999))
+examples> (-> (create)
+              (insert! 1 :a)
+              (insert! 2 999))
 Can't mix insert types
   [Thrown class com.bigml.histogram.MixedInsertException]
 ```
@@ -203,10 +203,10 @@ Can't mix insert types
 set explicitly:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert-categorical! 1 1)
-              (hst/insert-categorical! 1 2)
-              (hst/bins))
+examples> (-> (create)
+              (insert-categorical! 1 1)
+              (insert-categorical! 1 2)
+              (bins))
 ({:target {:counts {2 1.0, 1 1.0}, :missing-count 0.0}, :mean 1.0, :count 2})
 ```
 
@@ -214,11 +214,11 @@ The `extended-sum` fn works similarly to `sum`, but returns a result
 that includes the target information:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! 1 :a)
-              (hst/insert! 2 :b)
-              (hst/insert! 3 :c)
-              (hst/extended-sum 2))
+examples> (-> (create)
+              (insert! 1 :a)
+              (insert! 2 :b)
+              (insert! 3 :c)
+              (extended-sum 2))
 {:sum 1.5, :target {:counts {:c 0.0, :b 0.5, :a 1.0}, :missing-count 0.0}}
 ```
 
@@ -230,29 +230,29 @@ plotting easier). The density is in red and the average target value
 is in blue:
 
 ```clojure
-examples> (def make-y (fn [x] (+ 10000 (* 10000 (Math/sin x)))))
+examples> (def make-y (fn [x] (Math/sin x)))
 examples> (def hist (let [target-data (map (fn [x] [x (make-y x)])
                                            ex/normal-data)]
-                      (reduce (fn [h [x y]] (hst/insert! h x y))
-                              (hst/create)
+                      (reduce (fn [h [x y]] (insert! h x y))
+                              (create)
                               target-data)))
-examples> (ex/density-target-chart hist)
+examples> (ex/pdf-target-chart hist)
 ```
 ![Numeric target]
-(https://img.skitch.com/20120427-q2y753qwnt4x1mhbs3ri9ddgt.png)
+(https://img.skitch.com/20120719-tfjnabp7t7sanskf4iqecp751d.png)
 
 Continuing with the same histogram, we can see that `average-target`
 produces values close to original target:
 
 ```clojure
 examples> (def view-target (fn [x] {:actual (make-y x)
-                                    :approx (hst/average-target hist x)}))
+                                    :approx (average-target hist x)}))
 examples> (view-target 0)
-{:actual 10000.0, :approx {:sum 9617.150788081583, :missing-count 0.0}}
+{:actual 0.0, :approx {:sum -0.04696, :missing-count 0.0}}
 examples> (view-target (/ Math/PI 2))
-{:actual 20000.0, :approx {:sum 19967.590011881348, :missing-count 0.0}}
+{:actual 1.0, :approx {:sum 0.99698, :missing-count 0.0}}
 examples> (view-target Math/PI)
-{:actual 10000.000000000002, :approx {:sum 9823.774137889975, :missing-count 0.0}}
+{:actual 1.22464E-16, :approx {:sum -0.04881, :missing-count 0.0}}
 ```
 
 # Missing Values
@@ -263,11 +263,11 @@ summarizing the instances with a missing input. For a basic histogram,
 that is simply the count:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! nil)
-              (hst/insert! 7)
-              (hst/insert! nil)
-              (hst/missing-bin))
+examples> (-> (create)
+              (insert! nil)
+              (insert! 7)
+              (insert! nil)
+              (missing-bin))
 {:count 2}
 ```
 
@@ -275,11 +275,11 @@ For a histogram with a target, the `missing-bin` includes target
 information:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! nil :a)
-              (hst/insert! 7 :b)
-              (hst/insert! nil :c)
-              (hst/missing-bin))
+examples> (-> (create)
+              (insert! nil :a)
+              (insert! 7 :b)
+              (insert! nil :c)
+              (missing-bin))
 {:target {:counts {:a 1.0, :c 1.0}, :missing-count 0.0}, :count 2}
 ```
 
@@ -287,11 +287,11 @@ Targets can also be missing, in which case the target `missing-count`
 is incremented:
 
 ```clojure
-examples> (-> (hst/create)
-              (hst/insert! nil :a)
-              (hst/insert! 7 :b)
-              (hst/insert! nil nil)
-              (hst/missing-bin))
+examples> (-> (create)
+              (insert! nil :a)
+              (insert! 7 :b)
+              (insert! nil nil)
+              (missing-bin))
 {:target {:counts {:a 1.0}, :missing-count 1.0}, :count 2}
 ```
 
@@ -308,8 +308,8 @@ do this, set the `:categories` parameter:
 examples> (def categories (map (partial str "c") (range 50)))
 examples> (def data (vec (repeatedly 100000
                                      #(vector (rand) (str "c" (rand-int 50))))))
-examples> (doseq [hist [(hst/create) (hst/create :categories categories)]]
-            (time (reduce (fn [h [x y]] (hst/insert! h x y))
+examples> (doseq [hist [(create) (create :categories categories)]]
+            (time (reduce (fn [h [x y]] (insert! h x y))
                           hist
                           data)))
 "Elapsed time: 1295.402 msecs"
@@ -325,12 +325,12 @@ when creating the histogram. Declaring the types on creation allows
 the targets to be missing in the first insert:
 
 ```clojure
-examples> (-> (hst/create :group-types [:categorical :numeric])
-              (hst/insert! 1 [:a nil])
-              (hst/insert! 2 [:b 8])
-              (hst/insert! 3 [:c 7])
-              (hst/insert! 1 [:d 6])
-              (hst/bins))
+examples> (-> (create :group-types [:categorical :numeric])
+              (insert! 1 [:a nil])
+              (insert! 2 [:b 8])
+              (insert! 3 [:c 7])
+              (insert! 1 [:d 6])
+              (bins))
 ({:target ({:counts {:a 1.0, :d 1.0}, :missing-count 0.0}
            {:sum 6.0, :missing-count 1.0}),
   :mean 1.0, :count 2}
@@ -354,9 +354,9 @@ shift, inserts become computationally cheap. However the quality of
 the histogram can suffer if the `:freeze` parameter is too small.
 
 ```clojure
-examples> (time (reduce hst/insert! (hst/create) ex/normal-data))
+examples> (time (reduce insert! (create) ex/normal-data))
 "Elapsed time: 391.857 msecs"
-examples> (time (reduce hst/insert! (hst/create :freeze 1024) ex/normal-data))
+examples> (time (reduce insert! (create :freeze 1024) ex/normal-data))
 "Elapsed time: 99.92 msecs"
 ```
 
