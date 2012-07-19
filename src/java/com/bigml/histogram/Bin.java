@@ -81,10 +81,7 @@ public class Bin<T extends Target> {
       return false;
     }
     final Bin<T> other = (Bin<T>) obj;
-    if (Double.doubleToLongBits(_mean) != Double.doubleToLongBits(other._mean)) {
-      return false;
-    }
-    return true;
+    return Double.doubleToLongBits(_mean) == Double.doubleToLongBits(other._mean);
   }
 
   @Override
