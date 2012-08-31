@@ -322,10 +322,10 @@
   [^Histogram hist]
   (let [h-mean (mean hist)
         h-count (total-count hist)]
-    (when (pos? h-count)
+    (when (> h-count 1)
       (/ (reduce (fn [v {:keys [mean count]}]
                    (let [diff (- mean h-mean)]
                      (+ v (* count diff diff))))
                  0
                  (bins hist))
-         h-count))))
+         (dec h-count)))))

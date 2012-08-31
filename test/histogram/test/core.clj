@@ -262,6 +262,8 @@
     (is (= (maximum hist1) (maximum hist2)))))
 
 (deftest variance-test
+  (is (nil? (variance (insert! (create) 1))))
+  (is (= 3.5 (variance (reduce insert! (create) [1 2 3 4 5 6]))))
   (is (about= (variance (reduce insert! (create) (normal-data 10000)))
               1 0.05)))
 
