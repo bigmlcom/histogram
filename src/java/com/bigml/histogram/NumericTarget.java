@@ -6,8 +6,17 @@ import org.json.simple.JSONArray;
 
 public class NumericTarget extends Target<NumericTarget> {
   
+  private NumericTarget(Double target, Double sumSquares, double missingCount) {
+    _sum = target;
+    _sumSquares = sumSquares;
+    _missingCount = missingCount;
+  }
+
   public NumericTarget(Double target, double missingCount) {
-    _target = target;
+    _sum = target;
+    if (target != null) {
+      _sumSquares = target * target;
+    }
     _missingCount = missingCount;
   }
   
@@ -15,10 +24,14 @@ public class NumericTarget extends Target<NumericTarget> {
     this(target, target == null ? 1 : 0);
   }
 
-  public Double getTarget() {
-    return _target;
+  public Double getSum() {
+    return _sum;
   }
-  
+
+  public Double getSumSquares() {
+    return _sumSquares;
+  }
+
   @Override
   public double getMissingCount() {
     return _missingCount;
@@ -31,15 +44,16 @@ public class NumericTarget extends Target<NumericTarget> {
   
   @Override
   public String toString() {
-    return String.valueOf(_target);
+    return String.valueOf(_sum) + "," + String.valueOf(_sumSquares);
   }
 
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
-    if (_target == null) {
+    if (_sum == null) {
       binJSON.add(null);
     } else {
-      binJSON.add(Double.valueOf(format.format(_target)));
+      binJSON.add(Double.valueOf(format.format(_sum)));
+      binJSON.add(Double.valueOf(format.format(_sumSquares)));
     }
   }
   
@@ -50,18 +64,21 @@ public class NumericTarget extends Target<NumericTarget> {
 
   @Override
   protected NumericTarget clone() {
-    return new NumericTarget(_target, _missingCount);
+    return new NumericTarget(_sum, _sumSquares, _missingCount);
   }
 
-  private Double _target;
+  private Double _sum;
+  private Double _sumSquares;
   private double _missingCount;
 
   @Override
   protected NumericTarget sum(NumericTarget target) {
-    if (_target == null && target.getTarget() != null) {
-      _target = target.getTarget();
-    } else if (_target != null && target.getTarget() != null){
-      this._target += target.getTarget();
+    if (_sum == null && target.getSum() != null) {
+      _sum = target.getSum();
+      _sumSquares = target.getSumSquares();
+    } else if (_sum != null && target.getSum() != null){
+      _sum += target.getSum();
+      _sumSquares += target.getSumSquares();
     }
     _missingCount += target.getMissingCount();
     return this;
@@ -69,8 +86,9 @@ public class NumericTarget extends Target<NumericTarget> {
   
   @Override
   protected NumericTarget mult(double multiplier) {
-    if (_target != null) {
-      _target *= multiplier;
+    if (_sum != null) {
+      _sum *= multiplier;
+      _sumSquares *= multiplier;
     }
     _missingCount *= multiplier;
     return this;
