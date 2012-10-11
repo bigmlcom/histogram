@@ -165,8 +165,9 @@ variable called the *target*.
 
 The target may be either numeric or categorical. The `insert!` fn is
 overloaded to accept either type of target. Each histogram bin will
-contain information summarizing the target. For numerics the targets
-sums are tracked.  For categoricals a map of counts is maintained.
+contain information summarizing the target. For numeric targets the
+sum and sum-of-squares are tracked.  For categoricals, a map of
+counts is maintained.
 
 ```clojure
 examples> (-> (create)
@@ -175,18 +176,30 @@ examples> (-> (create)
               (insert! 3 7)
               (insert! 3 6)
               (bins))
-({:target {:sum 9.0, :missing-count 0.0}, :mean 1.0, :count 1}
- {:target {:sum 8.0, :missing-count 0.0}, :mean 2.0, :count 1}
- {:target {:sum 13.0, :missing-count 0.0}, :mean 3.0, :count 2})
+({:target {:sum 9.0, :sum-squares 81.0, :missing-count 0.0},
+  :mean 1.0,
+  :count 1}
+ {:target {:sum 8.0, :sum-squares 64.0, :missing-count 0.0},
+  :mean 2.0,
+  :count 1}
+ {:target {:sum 13.0, :sum-squares 85.0, :missing-count 0.0},
+  :mean 3.0,
+  :count 2})
 examples> (-> (create)
               (insert! 1 :a)
               (insert! 2 :b)
               (insert! 3 :c)
               (insert! 3 :d)
               (bins))
-({:target {:counts {:a 1.0}, :missing-count 0.0}, :mean 1.0, :count 1}
- {:target {:counts {:b 1.0}, :missing-count 0.0}, :mean 2.0, :count 1}
- {:target {:counts {:d 1.0, :c 1.0}, :missing-count 0.0}, :mean 3.0, :count 2})
+({:target {:counts {:a 1.0}, :missing-count 0.0},
+  :mean 1.0,
+  :count 1}
+ {:target {:counts {:b 1.0}, :missing-count 0.0},
+  :mean 2.0,
+  :count 1}
+ {:target {:counts {:d 1.0, :c 1.0}, :missing-count 0.0},
+  :mean 3.0,
+  :count 2})
 ```
 
 Mixing target types isn't allowed:
@@ -246,13 +259,14 @@ produces values close to original target:
 
 ```clojure
 examples> (def view-target (fn [x] {:actual (make-y x)
-                                    :approx (average-target hist x)}))
+                                    :approx (:sum (average-target hist x))}))
+{:actual 0.0, :approx -0.04261679840707788}
 examples> (view-target 0)
-{:actual 0.0, :approx {:sum -0.04696, :missing-count 0.0}}
-examples> (view-target (/ Math/PI 2))
-{:actual 1.0, :approx {:sum 0.99698, :missing-count 0.0}}
+{:actual 0.0, :approx -0.04261679840707788}
+examples>  (view-target (/ Math/PI 2))
+{:actual 1.0, :approx 0.9968169965429206}
 examples> (view-target Math/PI)
-{:actual 1.22464E-16, :approx {:sum -0.04881, :missing-count 0.0}}
+{:actual 0.0, :approx 0.021364059655214544}
 ```
 
 # Missing Values
@@ -331,15 +345,21 @@ examples> (-> (create :group-types [:categorical :numeric])
               (insert! 3 [:c 7])
               (insert! 1 [:d 6])
               (bins))
-({:target ({:counts {:a 1.0, :d 1.0}, :missing-count 0.0}
-           {:sum 6.0, :missing-count 1.0}),
-  :mean 1.0, :count 2}
- {:target ({:counts {:b 1.0}, :missing-count 0.0}
-           {:sum 8.0, :missing-count 0.0}),
-  :mean 2.0, :count 1}
- {:target ({:counts {:c 1.0}, :missing-count 0.0}
-           {:sum 7.0, :missing-count 0.0}),
-  :mean 3.0, :count 1})
+({:target
+  ({:counts {:d 1.0, :a 1.0}, :missing-count 0.0}
+   {:sum 6.0, :sum-squares 36.0, :missing-count 1.0}),
+  :mean 1.0,
+  :count 2}
+ {:target
+  ({:counts {:b 1.0}, :missing-count 0.0}
+   {:sum 8.0, :sum-squares 64.0, :missing-count 0.0}),
+  :mean 2.0,
+  :count 1}
+ {:target
+  ({:counts {:c 1.0}, :missing-count 0.0}
+   {:sum 7.0, :sum-squares 49.0, :missing-count 0.0}),
+  :mean 3.0,
+  :count 1})
 ```
 
 # Freezing a Histogram

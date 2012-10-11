@@ -349,7 +349,7 @@ public class Histogram<T extends Target> {
 
       NumericTarget countTarget = (NumericTarget) computeSum(bpRatio, new NumericTarget(prevCount),
               new NumericTarget(bin_i.getCount()), new NumericTarget(bin_i1.getCount()));
-      double countSum = countTarget.getTarget();
+      double countSum = countTarget.getSum();
 
       T targetSum = (T) computeSum(bpRatio, prevTargetSum, bin_i.getTarget(), bin_i1.getTarget());
 

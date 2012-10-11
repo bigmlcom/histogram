@@ -114,18 +114,24 @@
 
 (deftest group-test
   (let [points 10000
+        data (group-data points false)
         hist (reduce (fn [h [x y]] (insert! h x y))
                      (create)
-                     (group-data points false))
-        ext-sum (extended-sum hist 0.5)]
+                     data)
+        target (:target (extended-sum hist 0.5))]
     (is (= (target-type hist) :group))
     (is (= (group-types hist) '(:numeric :categorical)))
-    (is (about= (:sum (first (:target ext-sum)))
+    (is (about= (:sum (first target))
                 (/ points 4)
-                (/ points 100)))
-    (is (about= (:orange (:counts (second (:target ext-sum))))
+                (/ points 50)))
+    (is (about= (:sum-squares (first target))
+                (reduce + (map #(* % %)
+                               (take (int (/ (count data) 2))
+                                     (map first data))))
+                150))
+    (is (about= (:orange (:counts (second target)))
                 (/ points 6)
-                (/ points 100)))))
+                (/ points 50)))))
 
 (deftest weighted-gap-test
   ;; Histograms using weighted gaps are less eager to merge bins with
@@ -172,10 +178,10 @@
     (is (= result
            '({:mean 1.0
               :count 2
-              :target {:sum 1.0 :missing-count 1.0}}
+              :target {:sum 1.0 :sum-squares 1.0 :missing-count 1.0}}
              {:mean 5.0
               :count 2
-              :target {:sum 2.0 :missing-count 1.0}})))))
+              :target {:sum 2.0 :sum-squares 4.0 :missing-count 1.0}})))))
 
 (deftest categorical-missing-test
   (let [data [[1 :foo] [1 nil] [4 :bar] [6 nil]]

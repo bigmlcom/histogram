@@ -140,7 +140,8 @@
   nil)
 
 (defmethod scrub-target NumericTarget [^NumericTarget target]
-  {:sum (.getTarget target)
+  {:sum (.getSum target)
+   :sum-squares (.getSumSquares target)
    :missing-count (.getMissingCount target)})
 
 (defmethod scrub-target MapCategoricalTarget [^MapCategoricalTarget target]

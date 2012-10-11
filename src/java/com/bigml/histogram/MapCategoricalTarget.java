@@ -10,26 +10,26 @@ import org.json.simple.JSONObject;
 public class MapCategoricalTarget extends Target<MapCategoricalTarget> implements CategoricalTarget {
 
   public MapCategoricalTarget(Object category) {
-    _target = new HashMap<Object, Double>(1,1);
-    _target.put(category, 1d);
+    _counts = new HashMap<Object, Double>(1,1);
+    _counts.put(category, 1d);
   }
   
   public MapCategoricalTarget(HashMap<Object, Double> targetCounts, double missingCount) {
-    _target = targetCounts;
-    _target.put(null, missingCount);
+    _counts = targetCounts;
+    _counts.put(null, missingCount);
   }
 
   public MapCategoricalTarget(HashMap<Object, Double> targetCounts) {
-    _target = targetCounts;
+    _counts = targetCounts;
   }
   
   public HashMap<Object, Double> getCounts() {
-    return _target;
+    return _counts;
   }
 
   @Override
   public double getMissingCount() {
-    Double missingCount = _target.get(null);
+    Double missingCount = _counts.get(null);
     return missingCount == null ? 0 : missingCount;
   }
   
@@ -41,7 +41,7 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
   @Override
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONObject counts = new JSONObject();
-    for (Entry<Object,Double> categoryCount : _target.entrySet()) {
+    for (Entry<Object,Double> categoryCount : _counts.entrySet()) {
       Object category = categoryCount.getKey();
       double count = categoryCount.getValue();
       counts.put(category, Double.valueOf(format.format(count)));
@@ -54,11 +54,11 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
     for (Entry<Object, Double> categoryCount : target.getCounts().entrySet()) {
       Object category = categoryCount.getKey();
       
-      Double oldCount = _target.get(category);
+      Double oldCount = _counts.get(category);
       oldCount = (oldCount == null) ? 0 : oldCount;
 
       double newCount = oldCount + categoryCount.getValue();
-      _target.put(category, newCount);
+      _counts.put(category, newCount);
     }
     
     return this;
@@ -75,7 +75,7 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
 
   @Override
   protected MapCategoricalTarget clone() {
-    return new MapCategoricalTarget(new HashMap<Object, Double>(_target));
+    return new MapCategoricalTarget(new HashMap<Object, Double>(_counts));
   }
 
   @Override
@@ -83,5 +83,5 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
     return new MapCategoricalTarget(new HashMap<Object, Double>());
   }
   
-  private HashMap<Object, Double> _target;
+  private HashMap<Object, Double> _counts;
 }
