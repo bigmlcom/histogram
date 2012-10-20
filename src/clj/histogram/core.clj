@@ -38,16 +38,15 @@
   (instance? Histogram hist))
 
 (defn- java-target [target]
-  (let [target-val (or (:sum target) (:counts target))
-        missing-count (:missing-count target)]
-    (cond (number? target-val)
-          (NumericTarget. target-val missing-count)
-          (map? target-val)
-          (MapCategoricalTarget. (HashMap. target-val) missing-count)
-          (sequential? target-val)
-          (GroupTarget. (ArrayList. (map java-target target-val)))
-          (nil? target)
-          SimpleTarget/TARGET)))
+  (if (sequential? target)
+    (GroupTarget. (ArrayList. (map java-target target)))
+    (let [{:keys [sum sum-squares missing-count counts]} target]
+      (cond (contains? target :sum)
+            (NumericTarget. sum sum-squares missing-count)
+            (contains? target :counts)
+            (MapCategoricalTarget. (HashMap. counts) missing-count)
+            (nil? target)
+            SimpleTarget/TARGET))))
 
 (defn- java-bin [bin]
   (let [{:keys [mean count target]} bin]
@@ -275,7 +274,8 @@
                    {:max-bins (.getMaxBins hist)
                     :gap-weighted? (.isCountWeightedGaps hist)
                     :freeze (.getFreezeThreshold hist)
-                    :group-types (seq (.getGroupTypes hist))
+                    :group-types (map (comp keyword str)
+                                      (seq (.getGroupTypes hist)))
                     :categories (seq (.getTargetCategories hist))
                     :bins (bins hist)
                     :missing-bin (when (pos? (.getMissingCount hist))

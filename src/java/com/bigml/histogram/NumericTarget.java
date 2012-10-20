@@ -5,8 +5,8 @@ import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
 public class NumericTarget extends Target<NumericTarget> {
-  
-  private NumericTarget(Double target, Double sumSquares, double missingCount) {
+
+  public NumericTarget(Double target, Double sumSquares, double missingCount) {
     _sum = target;
     _sumSquares = sumSquares;
     _missingCount = missingCount;
@@ -19,7 +19,7 @@ public class NumericTarget extends Target<NumericTarget> {
     }
     _missingCount = missingCount;
   }
-  
+
   public NumericTarget(Double target) {
     this(target, target == null ? 1 : 0);
   }
@@ -41,7 +41,7 @@ public class NumericTarget extends Target<NumericTarget> {
   public TargetType getTargetType() {
     return Histogram.TargetType.numeric;
   }
-  
+
   @Override
   public String toString() {
     return String.valueOf(_sum) + "," + String.valueOf(_sumSquares);
@@ -56,7 +56,7 @@ public class NumericTarget extends Target<NumericTarget> {
       binJSON.add(Double.valueOf(format.format(_sumSquares)));
     }
   }
-  
+
   @Override
   protected NumericTarget init() {
     return new NumericTarget(0d);
@@ -83,7 +83,7 @@ public class NumericTarget extends Target<NumericTarget> {
     _missingCount += target.getMissingCount();
     return this;
   }
-  
+
   @Override
   protected NumericTarget mult(double multiplier) {
     if (_sum != null) {
