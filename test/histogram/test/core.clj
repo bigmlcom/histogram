@@ -256,6 +256,12 @@
     (is (== 5 (maximum merged)))))
 
 (deftest transform-test
+  (let [hist (-> (create)
+                 (insert! 1 [2 3 :a])
+                 (insert! 1 [9 2 :b])
+                 (insert! 4 [5 nil nil]))]
+    (is (= (hist-to-clj hist)
+           (hist-to-clj (clj-to-hist (hist-to-clj hist))))))
   (let [hist1 (reduce (fn [h [x y]] (insert! h x y))
                       (create :bins 8 :gap-weighted? true
                               :categories [:apple :orange :grape])
