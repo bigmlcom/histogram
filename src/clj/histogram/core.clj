@@ -194,11 +194,24 @@
   (first (uniform hist 2)))
 
 (defn mean
-  [^Histogram hist]
   "Returns the mean for the points inserted into the histogram."
+  [^Histogram hist]
   (when-not (empty? (.getBins hist))
     (.getMean ^Bin (reduce (fn [^Bin b1 ^Bin b2] (.combine b1 b2))
                            (.getBins hist)))))
+
+(defn percentiles
+  "Returns a map of percentiles and their associated locations."
+  [^Histogram hist & percentiles]
+  (into (sorted-map)
+        (.percentiles hist (into-array (map double percentiles)))))
+
+(defn sample
+  "Returns a sequence of samples from the distribution approximated by
+   the histogram."
+  [hist & [sample-size]]
+  (repeatedly (or sample-size 1)
+              #(second (first (percentiles hist (rand))))))
 
 (defn extended-sum
   "Returns the approximate number of points occuring in the histogram
@@ -251,20 +264,11 @@
   (.getMaximum hist))
 
 (defn bounds
-  "Returns the bounds of the histogram, nil if the histogram is empty.
-   An optional parameter may be supplied to enable a small buffer to
-   the bounds (true or false - default false)."
-  ([^Histogram hist]
-     (bounds hist false))
-  ([^Histogram hist buffer?]
-     (when-let [bins (seq (bins hist))]
-       (let [l-mean (:mean (last bins))
-             f-mean (:mean (first bins))]
-         (if (and buffer? (second bins))
-           {:min (- f-mean (apply - (map :mean (reverse (take 2 bins)))))
-            :max (+ l-mean (apply - (map :mean (reverse (take-last 2 bins)))))}
-           {:min f-mean
-            :max l-mean})))))
+  "Returns the bounds of the histogram, nil if the histogram is empty."
+  [^Histogram hist]
+  (when-let [bins (seq (bins hist))]
+    {:min (minimum hist)
+     :max (maximum hist)}))
 
 (defn hist-to-clj
   "Transforms a Histogram object into a Clojure map representing the

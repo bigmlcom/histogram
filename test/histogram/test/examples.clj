@@ -26,17 +26,17 @@
              (next hists)))))
 
 (defn sum-density-chart [hist]
-  (let [{:keys [min max]} (hst/bounds hist true)]
+  (let [{:keys [min max]} (hst/bounds hist)]
     (core/view (-> (charts/function-plot #(hst/sum hist %) min max)
                    (charts/add-function #(hst/density hist %) min max)))))
 
 (defn cdf-pdf-chart [hist]
-  (let [{:keys [min max]} (hst/bounds hist true)]
+  (let [{:keys [min max]} (hst/bounds hist)]
     (core/view (-> (charts/function-plot (hst/cdf hist) min max)
                    (charts/add-function (hst/pdf hist) min max)))))
 
 (defn pdf-target-chart [hist]
-  (let [{:keys [min max]} (hst/bounds hist true)]
+  (let [{:keys [min max]} (hst/bounds hist)]
     (core/view
      (-> (charts/function-plot (hst/pdf hist) min max)
          (charts/add-function #(:sum (hst/average-target hist %)) min max)))))
