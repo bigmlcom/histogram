@@ -20,7 +20,7 @@
   "Creates a histogram.
 
    Optional parameters:
-     :bins - Maximum bins to be used by the histogram (default 64)
+     :bins - Maximum bins to be used by the histogram (default 32)
      :gap-weighted? - Use gap weighting (true or false - default false)
      :categories - Collection of valid categories (improves performance)
      :group-types - A sequence of types (:numeric or :categorical) that
@@ -28,7 +28,7 @@
      :freeze - After this # of inserts, bin locations will 'freeze',
                improving the performance of future inserts."
   [& {:keys [bins gap-weighted? categories group-types freeze]
-      :or {bins 64 gap-weighted? false}}]
+      :or {bins 32 gap-weighted? false}}]
   (let [group-types (seq (map clj-to-java-types group-types))]
     (Histogram. bins gap-weighted? categories group-types freeze)))
 
