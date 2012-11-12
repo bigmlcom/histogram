@@ -58,7 +58,14 @@
         merged-hist (reduce merge! hists)]
     (is (about= (sum merged-hist 0)
                 (/ (* points hist-count) 2)
-                (/ (* points hist-count) 50)))))
+                (/ (* points hist-count) 50))))
+  (let [h1 (-> (create)
+               (insert! 1 1)
+               (insert! nil 1))
+        h2 (-> (create)
+               (insert! 2 2)
+               (insert! nil 2))]
+    (is (== 2 (total-count (merge! h1 h2))))))
 
 (deftest mixed-test
   (let [insert-pair #(apply insert! (apply insert! (create) %1) %2)
