@@ -533,7 +533,6 @@ public class Histogram<T extends Target> {
       _missingTarget.sum(histogram.getMissingTarget());
     }
     _missingCount += histogram.getMissingCount();
-    _totalCount += histogram.getMissingCount();
     return this;
   }
 
