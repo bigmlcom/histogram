@@ -58,7 +58,14 @@
         merged-hist (reduce merge! hists)]
     (is (about= (sum merged-hist 0)
                 (/ (* points hist-count) 2)
-                (/ (* points hist-count) 50)))))
+                (/ (* points hist-count) 50))))
+  (let [h1 (-> (create)
+               (insert! 1 1)
+               (insert! nil 1))
+        h2 (-> (create)
+               (insert! 2 2)
+               (insert! nil 2))]
+    (is (== 2 (total-count (merge! h1 h2))))))
 
 (deftest mixed-test
   (let [insert-pair #(apply insert! (apply insert! (create) %1) %2)
@@ -74,13 +81,13 @@
 (deftest density-test
   (let [hist (reduce insert! (create) [1 2 2 3])]
     (is (= 0.0 (density hist 0.0)))
-    (is (= 0.5 (density hist 0.5)))
-    (is (= 1.0 (density hist 1.0)))
-    (is (= 1.5 (density hist 1.5)))
-    (is (= 1.5 (density hist 2.0)))
-    (is (= 1.5 (density hist 2.5)))
-    (is (= 1.0 (density hist 3.0)))
-    (is (= 0.5 (density hist 3.5)))
+    (is (= 0.0 (density hist 0.5)))
+    (is (= 0.5 (density hist 1.0)))
+    (is (= 1.0 (density hist 1.5)))
+    (is (= 1.0 (density hist 2.0)))
+    (is (= 1.0 (density hist 2.5)))
+    (is (= 0.5 (density hist 3.0)))
+    (is (= 0.0 (density hist 3.5)))
     (is (= 0.0 (density hist 4.0)))))
 
 (deftest categorical-test
