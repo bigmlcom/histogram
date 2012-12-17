@@ -254,7 +254,7 @@ public class Histogram<T extends Target> {
   public boolean isCountWeightedGaps() {
     return _countWeightedGaps;
   }
-  
+
   /**
    * Returns the categories for an array-backed
    * categorical histogram
@@ -290,9 +290,13 @@ public class Histogram<T extends Target> {
    */
   public SumResult<T> extendedSum(double p) throws SumOutOfRangeException {
     SumResult<T> result;
-    
+
     if (_bins.isEmpty()) {
       throw new SumOutOfRangeException("Cannot sum with an empty histogram.");
+    }
+
+    if (Double.isNaN(p)) {
+      throw new SumOutOfRangeException("Range point is not a number");
     }
 
     double binMin = _bins.firstKey();
@@ -317,7 +321,7 @@ public class Histogram<T extends Target> {
         result = new SumResult<T>(countSum, targetSum);
       } else {
         result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
-      }      
+      }
     } else if (p == binMax) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
@@ -506,7 +510,7 @@ public class Histogram<T extends Target> {
     }
     return uniformBinSplits;
   }
-  
+
   /**
    * Returns a map of percentiles and their associated locations.
    *
@@ -708,7 +712,7 @@ public class Histogram<T extends Target> {
   private void updateBins(Bin<T> bin) {
     _totalCount += bin.getCount();
     Bin<T> existingBin = _bins.get(bin.getMean());
-    if (_freezeThreshold != null 
+    if (_freezeThreshold != null
             && _totalCount > _freezeThreshold
             && _bins.size() == _maxBins) {
       Double floorDiff = Double.MAX_VALUE;
@@ -743,7 +747,7 @@ public class Histogram<T extends Target> {
     Bin<T> maxBin = new Bin(_maximum, 0d, _bins.firstEntry().getValue().getTarget().init());
     binSumMap.put(0d, minBin);
     binSumMap.put((double) _totalCount, maxBin);
-    
+
     for (Bin<T> bin : _bins.values()) {
       try {
         double sum = sum(bin.getMean());
@@ -813,7 +817,7 @@ public class Histogram<T extends Target> {
       Bin<T> bin_i1 = binSumMap.get(sumP_i1);
       double p_i1 = bin_i1.getMean();
       double m_i1 = bin_i1.getCount();
-      
+
       double d = s - sumP_i;
       double a = m_i1 - m_i;
 
