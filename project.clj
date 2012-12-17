@@ -1,8 +1,9 @@
 
-(defproject histogram "2.1.1"
+(defproject histogram "2.1.2"
   :description "Dynamic/streaming histograms"
   :source-path "src/clj"
   :java-source-path "src/java"
+  :javac-options {:debug "on"}
   :run-aliases {:examples histogram.test.examples}
   :dev-dependencies [[incanter/incanter-core "1.3.0"]
                      [incanter/incanter-charts "1.3.0"]]
