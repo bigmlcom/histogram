@@ -430,48 +430,9 @@ public class Histogram<T extends Target> {
    * @param p the density estimate point
    */
   public T averageTarget(double p) {
-    T averageTarget;
-
-    Bin<T> exact = _bins.get(p);
-    if (exact != null) {
-      double higher = Double.longBitsToDouble(Double.doubleToLongBits(p) + 1);
-      double lower = Double.longBitsToDouble(Double.doubleToLongBits(p) - 1);
-
-      averageTarget = (T) averageTarget(lower).sum(averageTarget(higher)).mult(0.5);
-    } else {
-      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p);
-      Entry<Double, Bin<T>> higher = _bins.higherEntry(p);
-      if (lower == null && higher == null) {
-        averageTarget = null;
-      } else if (lower == null || higher == null) {
-        Bin<T> bin;
-        if (lower != null) {
-          bin = lower.getValue();
-        } else {
-          bin = higher.getValue();
-        }
-
-        if (Math.abs(p - bin.getMean()) < binGapRange(p, bin)) {
-          double targetCount = bin.getCount() - bin.getTarget().getMissingCount();
-          averageTarget = (T) bin.getTarget().clone().mult(1 / targetCount);
-        } else {
-          averageTarget = null;
-        }
-      } else {
-        Bin<T> hBin = higher.getValue();
-        double hCount = hBin.getCount() - hBin.getTarget().getMissingCount();
-        T hTarget = (T) hBin.getTarget();
-
-        Bin<T> lBin = lower.getValue();
-        double lCount = lBin.getCount() - lBin.getTarget().getMissingCount();
-        T lTarget = (T) lBin.getTarget();
-
-        double totalCount = lCount + hCount;
-        averageTarget = (T) lTarget.clone().sum(hTarget).mult(1 / totalCount);
-      }
-    }
-
-    return averageTarget;
+    SumResult<T> density = extendedDensity(p);
+    double count = density.getCount();
+    return (T) density.getTargetSum().mult(1 / count);
   }
 
   /**
