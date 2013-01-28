@@ -26,7 +26,7 @@ generate data and for charting.
 
 The simplest way to use a histogram is to `create` one and then
 `insert!` points.  In the example below, `ex/normal-data` refers to a
-sequence of 100K samples from a normal distribution (mean 0, variance
+sequence of 200K samples from a normal distribution (mean 0, variance
 1).
 
 ```clojure
@@ -69,7 +69,7 @@ examples> (percentiles hist 0.5 0.95 0.99)
 
 We can plot the sums and density estimates as functions.  The red line
 represents the sum, the blue line represents the density.  If we
-normalized the values (dividing by 100K), these lines approximate the
+normalized the values (dividing by 200K), these lines approximate the
 [cumulative distribution
 function](http://en.wikipedia.org/wiki/Cumulative_distribution_function)
 and the [probability distribution
