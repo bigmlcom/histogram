@@ -431,8 +431,7 @@ public class Histogram<T extends Target> {
    */
   public T averageTarget(double p) {
     SumResult<T> density = extendedDensity(p);
-    double count = density.getCount();
-    return (T) density.getTargetSum().mult(1 / count);
+    return (T) density.getTargetSum().mult(1 / density.getCount());
   }
 
   /**
