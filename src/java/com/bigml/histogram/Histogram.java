@@ -732,23 +732,30 @@ public class Histogram<T extends Target> {
     return range;
   }
 
-  // m = i + (i1 - i) * r
-  // s = p + i/2 + (m + i) * r/2
-  // s = p + i/2 + (i + (i1 - i) * r + i) * r/2
-  // s = p + i/2 + (i + r*i1 - r*i + i) * r/2
-  // s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
-  // s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
-  // s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
-  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+  /*
+   * Deriving the sum in terms of p, r, i, and i1 
+   * starting from the Ben-Haim paper:
+   * m = i + (i1 - i) * r
+   * s = p + i/2 + (m + i) * r/2
+   * s = p + i/2 + (i + (i1 - i) * r + i) * r/2
+   * s = p + i/2 + (i + r*i1 - r*i + i) * r/2
+   * s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
+   * s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
+   * s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
+   * s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+   */
   private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
     double i1Term = 0.5 * r * r;
     double iTerm = 0.5 + r - i1Term;
     return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
   }
 
-  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
-  // r = (x - m) / (m1 - m)
-  // s_dx = i - (i1 - i) * (x - m) / (m1 - m)
+  /*
+   * Finding the density starting from the sum
+   * s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+   * r = (x - m) / (m1 - m)
+   * s_dx = i - (i1 - i) * (x - m) / (m1 - m)
+   */
   private <U extends Target> Target computeDensity(double r, double m, double m1, U i, U i1) {
     return i.clone().sum(i1.clone().sum(i.clone().mult(-1)).mult(r)).mult(1 / (m1 - m));
   }
