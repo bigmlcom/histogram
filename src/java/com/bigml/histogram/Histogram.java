@@ -299,25 +299,9 @@ public class Histogram<T extends Target> {
     double binMax = _bins.lastKey();
 
     if (p < _minimum) {
-        result = new SumResult<T>(0, (T) _bins.firstEntry().getValue().getTarget().init());
+      result = new SumResult<T>(0, (T) _bins.firstEntry().getValue().getTarget().init());
     } else if (p >= _maximum) {
-        result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
-    } else if (p < binMin) {
-      Bin<T> bin = _bins.firstEntry().getValue();
-      double distanceRatio = ((p - _minimum ) / (bin.getMean() - _minimum)) / 2;
-      double countSum = distanceRatio * bin.getCount();
-      T targetSum = (T) bin.getTarget().clone().mult(distanceRatio);
-      result = new SumResult<T>(countSum, targetSum);
-    } else if (p > binMax) {
-      Bin<T> bin = _bins.lastEntry().getValue();
-      double distanceRatio = ((_maximum - p) / (_maximum - bin.getMean())) / 2;
-      if (distanceRatio > 0) {
-        double countSum = getTotalCount() - distanceRatio * bin.getCount();
-        T targetSum = (T) getTotalTargetSum().sum(bin.getTarget().clone().mult(-distanceRatio));
-        result = new SumResult<T>(countSum, targetSum);
-      } else {
-        result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
-      }      
+      result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
     } else if (p == binMax) {
       Bin<T> lastBin = _bins.lastEntry().getValue();
 
@@ -327,14 +311,28 @@ public class Histogram<T extends Target> {
 
       result = new SumResult<T>(count, targetSum);
     } else {
-      Bin<T> bin_i = _bins.floorEntry(p).getValue();
-      Bin<T> bin_i1 = _bins.higherEntry(p).getValue();
+      T emptyTarget = (T) _bins.firstEntry().getValue().getTarget().init();
+      Entry<Double,Bin<T>> bin_iEntry = _bins.floorEntry(p);
+      Bin<T> bin_i;
+      if (bin_iEntry == null) {
+        bin_i = new Bin(_minimum, 0, emptyTarget.clone());
+      } else {
+        bin_i = bin_iEntry.getValue();
+      }
+      
+      Entry<Double,Bin<T>> bin_i1Entry = _bins.higherEntry(p);
+      Bin<T> bin_i1;
+      if (bin_i1Entry == null) {
+        bin_i1 = new Bin(_maximum, 0, emptyTarget.clone());
+      } else {
+        bin_i1 = bin_i1Entry.getValue();
+      }
 
       double prevCount = 0;
-      T prevTargetSum = (T) _bins.firstEntry().getValue().getTarget().init();
+      T prevTargetSum = (T) emptyTarget.clone();
 
       for (Bin<T> bin : _bins.values()) {
-        if (bin.equals(bin_i)) {
+        if (bin.equals(bin_i) || bin_i.getMean() == _minimum) {
           break;
         }
         prevCount += bin.getCount();
@@ -375,50 +373,51 @@ public class Histogram<T extends Target> {
    * @param p the density estimate point
    */
   public SumResult<T> extendedDensity(double p) {
+    T emptyTarget = (T) _bins.firstEntry().getValue().getTarget().init();
     double countDensity;
     T targetDensity;
 
     Bin<T> exact = _bins.get(p);
-    if (exact != null) {
+    if (p < _minimum || p > _maximum) {
+      countDensity = 0;
+      targetDensity = (T) emptyTarget.clone();
+    } else if (exact != null) {
       double higher = Double.longBitsToDouble(Double.doubleToLongBits(p) + 1);
       double lower = Double.longBitsToDouble(Double.doubleToLongBits(p) - 1);
 
-      countDensity = (density(higher) + density(lower)) / 2;
-      targetDensity = (T) exact.getTarget().clone().mult(countDensity);
+      SumResult<T> lowerResult = extendedDensity(lower);
+      SumResult<T> higherResult = extendedDensity(higher);
+      countDensity = (lowerResult.getCount() + higherResult.getCount()) / 2;
+      targetDensity = (T) lowerResult.getTargetSum().clone().sum(higherResult.getTargetSum()).mult(0.5);
     } else {
-      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p);
-      Entry<Double, Bin<T>> higher = _bins.higherEntry(p);
-      if (lower == null && higher == null) {
-        countDensity = 0;
-        targetDensity = null;
-      } else if (lower == null || higher == null) {
-        Bin<T> bin;
-        if (lower != null) {
-          bin = lower.getValue();
-        } else {
-          bin = higher.getValue();
-        }
-
-        if (Math.abs(p - bin.getMean()) < binGapRange(p, bin)) {
-          countDensity = binGapDensity(p, bin);
-          targetDensity = (T) bin.getTarget().clone().mult(countDensity);
-        } else {
-          countDensity = 0;
-          targetDensity = (T) bin.getTarget().init();
-        }
+      Entry<Double, Bin<T>> lowerEntry = _bins.lowerEntry(p);
+      Bin<T> lowerBin;
+      if (lowerEntry == null) {
+        lowerBin = new Bin(_minimum, 0, emptyTarget.clone());
       } else {
-        Bin<T> hBin = higher.getValue();
-        double hDensity = binGapDensity(p, hBin);
-
-        Bin<T> lBin = lower.getValue();
-        double lDensity = binGapDensity(p, lBin);
-
-        countDensity = hDensity + lDensity;
-
-        T lTargetDensity = (T) lBin.getTarget().clone().mult(lDensity);
-        T hTargetDensity = (T) hBin.getTarget().clone().mult(hDensity);
-        targetDensity = (T) lTargetDensity.sum(hTargetDensity);
+        lowerBin = lowerEntry.getValue();
       }
+        
+      Entry<Double, Bin<T>> higherEntry = _bins.higherEntry(p);
+      Bin<T> higherBin;
+      if (higherEntry == null) {
+        higherBin = new Bin(_maximum, 0, emptyTarget.clone());
+      } else {
+        higherBin = higherEntry.getValue();
+      }
+
+      double bDiff = p - lowerBin.getMean();
+      double pDiff = higherBin.getMean() - lowerBin.getMean();
+      double bpRatio = bDiff / pDiff;
+      
+      NumericTarget countTarget = 
+              (NumericTarget) computeDensity(bpRatio, lowerBin.getMean(), higherBin.getMean(),
+              new NumericTarget(lowerBin.getCount()), new NumericTarget(higherBin.getCount()));
+      countDensity = countTarget.getSum();
+
+      targetDensity = 
+              (T) computeDensity(bpRatio, lowerBin.getMean(), higherBin.getMean(),
+              lowerBin.getTarget(), higherBin.getTarget());      
     }
 
     return new SumResult<T>(countDensity, targetDensity);
@@ -431,48 +430,8 @@ public class Histogram<T extends Target> {
    * @param p the density estimate point
    */
   public T averageTarget(double p) {
-    T averageTarget;
-
-    Bin<T> exact = _bins.get(p);
-    if (exact != null) {
-      double higher = Double.longBitsToDouble(Double.doubleToLongBits(p) + 1);
-      double lower = Double.longBitsToDouble(Double.doubleToLongBits(p) - 1);
-
-      averageTarget = (T) averageTarget(lower).sum(averageTarget(higher)).mult(0.5);
-    } else {
-      Entry<Double, Bin<T>> lower = _bins.lowerEntry(p);
-      Entry<Double, Bin<T>> higher = _bins.higherEntry(p);
-      if (lower == null && higher == null) {
-        averageTarget = null;
-      } else if (lower == null || higher == null) {
-        Bin<T> bin;
-        if (lower != null) {
-          bin = lower.getValue();
-        } else {
-          bin = higher.getValue();
-        }
-
-        if (Math.abs(p - bin.getMean()) < binGapRange(p, bin)) {
-          double targetCount = bin.getCount() - bin.getTarget().getMissingCount();
-          averageTarget = (T) bin.getTarget().clone().mult(1 / targetCount);
-        } else {
-          averageTarget = null;
-        }
-      } else {
-        Bin<T> hBin = higher.getValue();
-        double hCount = hBin.getCount() - hBin.getTarget().getMissingCount();
-        T hTarget = (T) hBin.getTarget();
-
-        Bin<T> lBin = lower.getValue();
-        double lCount = lBin.getCount() - lBin.getTarget().getMissingCount();
-        T lTarget = (T) lBin.getTarget();
-
-        double totalCount = lCount + hCount;
-        averageTarget = (T) lTarget.clone().sum(hTarget).mult(1 / totalCount);
-      }
-    }
-
-    return averageTarget;
+    SumResult<T> density = extendedDensity(p);
+    return (T) density.getTargetSum().mult(1 / density.getCount());
   }
 
   /**
@@ -773,27 +732,32 @@ public class Histogram<T extends Target> {
     return range;
   }
 
-  private double binGapDensity(double p, Bin<T> bin) {
-    double range = binGapRange(p, bin);
-    if (range == 0) {
-      return 0;
-    } else {
-      return (bin.getCount() / 2) / range;
-    }
-  }
-
-  // m = i + (i1 - i) * r
-  // s = p + i/2 + (m + i) * r/2
-  // s = p + i/2 + (i + (i1 - i) * r + i) * r/2
-  // s = p + i/2 + (i + r*i1 - r*i + i) * r/2
-  // s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
-  // s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
-  // s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
-  // s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+  /*
+   * Deriving the sum in terms of p, r, i, and i1 
+   * starting from the Ben-Haim paper:
+   * m = i + (i1 - i) * r
+   * s = p + i/2 + (m + i) * r/2
+   * s = p + i/2 + (i + (i1 - i) * r + i) * r/2
+   * s = p + i/2 + (i + r*i1 - r*i + i) * r/2
+   * s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
+   * s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
+   * s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
+   * s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+   */
   private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
     double i1Term = 0.5 * r * r;
     double iTerm = 0.5 + r - i1Term;
     return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
+  }
+
+  /*
+   * Finding the density starting from the sum
+   * s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+   * r = (x - m) / (m1 - m)
+   * s_dx = i - (i1 - i) * (x - m) / (m1 - m)
+   */
+  private <U extends Target> Target computeDensity(double r, double m, double m1, U i, U i1) {
+    return i.clone().sum(i1.clone().sum(i.clone().mult(-1)).mult(r)).mult(1 / (m1 - m));
   }
 
   private double findPointForSum(double s, TreeMap<Double, Bin<T>> binSumMap) {
@@ -818,7 +782,7 @@ public class Histogram<T extends Target> {
       double a = m_i1 - m_i;
 
       double u;
-      if (a == 0 || m_i == 0 || m_i1 == 0) {
+      if (a == 0) {
         double offset = d / ((m_i + m_i1) / 2);
         u = p_i + (offset * (p_i1 - p_i));
       } else {

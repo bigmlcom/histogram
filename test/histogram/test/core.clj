@@ -80,15 +80,15 @@
 
 (deftest density-test
   (let [hist (reduce insert! (create) [1 2 2 3])]
-    (is (= 0.0 (density hist 0.0)))
-    (is (= 0.0 (density hist 0.5)))
-    (is (= 0.5 (density hist 1.0)))
-    (is (= 1.0 (density hist 1.5)))
-    (is (= 1.0 (density hist 2.0)))
-    (is (= 1.0 (density hist 2.5)))
-    (is (= 0.5 (density hist 3.0)))
-    (is (= 0.0 (density hist 3.5)))
-    (is (= 0.0 (density hist 4.0)))))
+    (is (about= 0.0 (density hist 0.0) 1E-10))
+    (is (about= 0.0 (density hist 0.5) 1E-10))
+    (is (about= 0.5 (density hist 1.0) 1E-10))
+    (is (about= 1.5 (density hist 1.5) 1E-10))
+    (is (about= 2.0 (density hist 2.0) 1E-10))
+    (is (about= 1.5 (density hist 2.5) 1E-10))
+    (is (about= 0.5 (density hist 3.0) 1E-10))
+    (is (about= 0.0 (density hist 3.5) 1E-10))
+    (is (about= 0.0 (density hist 4.0) 1E-10))))
 
 (deftest categorical-test
   (let [points 10000

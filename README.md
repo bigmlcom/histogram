@@ -26,7 +26,7 @@ generate data and for charting.
 
 The simplest way to use a histogram is to `create` one and then
 `insert!` points.  In the example below, `ex/normal-data` refers to a
-sequence of 100K samples from a normal distribution (mean 0, variance
+sequence of 200K samples from a normal distribution (mean 0, variance
 1).
 
 ```clojure
@@ -41,7 +41,7 @@ than a given threshold:
 
 ```clojure
 examples> (sum hist 0)
-50044.02331
+99814.63248
 ```
 
 The `density` fn gives us an estimate of the point density at the
@@ -49,7 +49,7 @@ given location:
 
 ```clojure
 examples> (density hist 0)
-39687.56279
+80936.98291
 ```
 
 The `uniform` fn returns a list of points that separate the
@@ -58,12 +58,18 @@ produces quartiles:
 
 ```clojure
 examples> (uniform hist 4)
-(-0.67234 -0.00111 0.67133)
+(-0.66904 0.00229 0.67605)
+```
+Arbritrary percentiles can be found using `percentiles`:
+
+```clojure
+examples> (percentiles hist 0.5 0.95 0.99)
+{0.5 0.00229, 0.95 1.63853, 0.99 2.31390}
 ```
 
 We can plot the sums and density estimates as functions.  The red line
 represents the sum, the blue line represents the density.  If we
-normalized the values (dividing by 100K), these lines approximate the
+normalized the values (dividing by 200K), these lines approximate the
 [cumulative distribution
 function](http://en.wikipedia.org/wiki/Cumulative_distribution_function)
 and the [probability distribution
@@ -74,15 +80,16 @@ for the normal distribution.
 examples> (ex/sum-density-chart hist) ;; also see (ex/cdf-pdf-chart hist)
 ```
 ![Histogram from normal distribution]
-(https://img.skitch.com/20120427-jhrhpshfm6pppu3t3bu4kt9g7e.png)
+(https://www.evernote.com/shard/s4/sh/acee03ad-4f5f-4fbf-82f1-5dc7301fc260/85e8b22b12e02a302198110ca77a89b2/res/eb14258d-2830-4362-aca4-590c83866946/skitch.png)
 
 The histogram approximates distributions using a constant number of
 bins. This bin limit is a parameter when creating a histogram
 (`:bins`, defaults to 64). A bin contains a `:count` of the points
 within the bin along with the `:mean` for the values in the bin. The
 edges of the bin aren't captured. Instead the histogram assumes that
-points are distributed evenly with half the points less than the mean
-and half greater. This explains the fraction sum in the example below:
+points of a bin are distributed with half the points less than the bin
+mean and half greater. This explains the fractional sum in the example
+below:
 
 ```clojure
 examples> (def hist (-> (create :bins 3)
@@ -108,16 +115,16 @@ examples> (bins (insert! hist 0.5))
 
 A larger bin limit means a higher quality picture of the distribution,
 but it also means a larger memory footprint.  In the chart below, the
-red line represents a histogram with 16 bins and the blue line
+red line represents a histogram with 8 bins and the blue line
 represents 64 bins.
 
 ```clojure
 examples> (ex/multi-pdf-chart
-           [(reduce insert! (create :bins 16) ex/normal-data)
-            (reduce insert! (create :bins 64) ex/normal-data)])
+           [(reduce insert! (create :bins 8) ex/mixed-normal-data)
+            (reduce insert! (create :bins 64) ex/mixed-normal-data)])
 ```
-![64 and 32 bins histograms]
-(https://img.skitch.com/20120719-e9hhw8hu6ye74b8stg1fh8tyhf.png)
+![8 and 64 bins histograms]
+(https://www.evernote.com/shard/s4/sh/580f6e58-2e9d-42f1-8288-d84013fa962d/38b9d70534c37ff680c68bd2f251d710/res/9451f44b-e364-499e-af78-a827729b9612/skitch.png)
 
 Another option when creating a histogram is to use *gap
 weighting*. When `:gap-weighted?` is true, the histogram is encouraged
@@ -125,18 +132,18 @@ to spend more of its bins capturing the densest areas of the
 distribution. For the normal distribution that means better resolution
 near the mean and less resolution near the tails. The chart below
 shows a histogram without gap weighting in blue and with gap weighting
-in red.  Near the center of the distribution, red uses six bins in
-roughly the same space that blue uses three.
+in red.  Near the center of the distribution, red uses more bins and
+better captures the gaussian distribution's true curve.
 
 ```clojure
 examples> (ex/multi-pdf-chart
-           [(reduce insert! (create :bins 16 :gap-weighted? true)
+           [(reduce insert! (create :bins 8 :gap-weighted? true)
                     ex/normal-data)
-            (reduce insert! (create :bins 16 :gap-weighted? false)
+            (reduce insert! (create :bins 8 :gap-weighted? false)
                     ex/normal-data)])
 ```
 ![Gap weighting vs. No gap weighting]
-(https://img.skitch.com/20120719-e82yxgkph9te4fucc5yuktfy1m.png)
+(https://www.evernote.com/shard/s4/sh/526873b6-e8dc-458a-a7e5-805faa66d9a0/e6144df90e693bdba08256bab325f241/res/6acb5020-0e4e-4bc5-8185-249f7f090a88/skitch.png)
 
 # Merging
 
@@ -144,17 +151,18 @@ A strength of the histograms is their ability to merge with one
 another. Histograms can be built on separate data streams and then
 combined to give a better overall picture.
 
+In this example, the blue line shows a density distribution from a
+histogram after merging 300 noisy histograms. The red shows one of the
+original histograms:
+
 ```clojure
-examples> (let [samples (partition 1000 ex/normal-data)
-                hist1 (reduce insert! (create :bins 16) (first samples))
-                hist2 (reduce insert! (create :bins 16) (second samples))
-                merged (-> (create :bins 16)
-                           (merge! hist1)
-                           (merge! hist2))]
-            (ex/multi-density-chart [hist1 hist2 merged]))
+examples> (let [samples (partition 1000 ex/mixed-normal-data)
+                hists (map #(reduce insert! (create) %) samples)
+                merged (reduce merge! (create) (take 300 hists))]
+            (ex/multi-pdf-chart [(first hists) merged]))
 ```
 ![Merged histograms]
-(https://img.skitch.com/20120427-18ndb278u2bmep8aqq9bc3m7qk.png)
+(https://www.evernote.com/shard/s4/sh/3ed19b0c-11a9-4c21-a751-5d5cdaede224/f0429a26c621f89ccaa52e6c476d98bb/res/a6ea07e9-90d5-4309-968b-e1095505a13d/skitch.png)
 
 # Targets
 
@@ -238,9 +246,8 @@ examples> (-> (create)
 The `average-target` fn returns the average target value given a
 point. To illustrate, the following histogram captures a dataset where
 the input field is a sample from the normal distribution while the
-target value is the sine of the input (but scaled and shifted to make
-plotting easier). The density is in red and the average target value
-is in blue:
+target value is the sine of the input. The density is in red and the
+average target value is in blue:
 
 ```clojure
 examples> (def make-y (fn [x] (Math/sin x)))
@@ -252,7 +259,7 @@ examples> (def hist (let [target-data (map (fn [x] [x (make-y x)])
 examples> (ex/pdf-target-chart hist)
 ```
 ![Numeric target]
-(https://img.skitch.com/20120719-tfjnabp7t7sanskf4iqecp751d.png)
+(https://www.evernote.com/shard/s4/sh/34b51a39-b090-4f33-93a2-7be1112b869e/e3d276b3adb347b3c493a295bb585f8d/res/4a254bbb-6111-43cb-826d-f09d8d3048c7/skitch.png)
 
 Continuing with the same histogram, we can see that `average-target`
 produces values close to original target:
@@ -260,13 +267,12 @@ produces values close to original target:
 ```clojure
 examples> (def view-target (fn [x] {:actual (make-y x)
                                     :approx (:sum (average-target hist x))}))
-{:actual 0.0, :approx -0.04261679840707788}
 examples> (view-target 0)
-{:actual 0.0, :approx -0.04261679840707788}
+{:actual 0.0, :approx -0.00051}
 examples>  (view-target (/ Math/PI 2))
 {:actual 1.0, :approx 0.9968169965429206}
 examples> (view-target Math/PI)
-{:actual 0.0, :approx 0.021364059655214544}
+{:actual 0.0, :approx 0.00463}
 ```
 
 # Missing Values
