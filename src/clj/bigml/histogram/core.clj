@@ -1,4 +1,8 @@
-(ns histogram.core
+;; Copyright 2013 BigML
+;; Licensed under the Apache License, Version 2.0
+;; http://www.apache.org/licenses/LICENSE-2.0
+
+(ns bigml.histogram.core
   (:import (com.bigml.histogram Histogram Histogram$TargetType Bin
                                 Target SimpleTarget NumericTarget
                                 ArrayCategoricalTarget GroupTarget
@@ -311,7 +315,7 @@
                     (bins)))))
 
 (defn cdf
-  "Returns the cumulative distribution function for histogram."
+  "Returns the cumulative distribution function for the histogram."
   [^Histogram hist]
   (let [total (total-count hist)]
     #(/ (sum hist %) total)))

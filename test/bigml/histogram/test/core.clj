@@ -1,7 +1,11 @@
-(ns histogram.test.core
+;; Copyright 2013 BigML
+;; Licensed under the Apache License, Version 2.0
+;; http://www.apache.org/licenses/LICENSE-2.0
+
+(ns bigml.histogram.test.core
   (:import [java.lang Math]
            [java.util Random])
-  (:use [histogram.core]
+  (:use [bigml.histogram.core]
         [clojure.test]))
 
 (defn- about= [v1 v2 epsilon]
