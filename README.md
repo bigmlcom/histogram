@@ -5,19 +5,42 @@ histograms described in Ben-Haim's [Streaming Parallel Decision
 Trees](http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html). Inspired
 by Tyree's [Parallel Boosted Regression
 Trees](http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf),
-the histograms are extended to track multiple values.
+the histograms are extended so they may track multiple values.
 
 The histograms act as an approximation of the underlying dataset. They
 can be used for learning, visualization, discretization, or analysis.
-The histograms may be built independently and merged, convenient for
-parallel and distributed algorithms.
+The histograms may be built independently and merged, making them
+convenient for parallel and distributed algorithms.
 
-# Building
+While the core of this library is implemented in Java, it includes a
+full featured Clojure wrapper. This readme focuses on the Clojure
+interface, but Java developers can find documented methods in
+`com.bigml.histogram.Histogram`.
 
-1. Make sure you have Java 1.6 or newer
-2. Install [leiningen](https://github.com/technomancy/leiningen)
-3. Checkout the histogram project with git
-4. Run `lein jar`
+# Installation
+
+`histogram` is available as a Maven artifact from
+[Clojars](http://clojars.org/bigml/histogram).
+
+For [Leiningen](https://github.com/technomancy/leiningen):
+
+```clojure
+[bigml/histogram "3.0.0"]
+```
+
+For [Maven](http://maven.apache.org/):
+
+```xml
+<repository>
+  <id>clojars.org</id>
+  <url>http://clojars.org/repo</url>
+</repository>
+<dependency>
+  <groupId>bigml</groupId>
+  <artifactId>histogram</artifactId>
+  <version>3.0.0</version>
+</dependency>
+```
 
 # Basics
 
@@ -31,8 +54,8 @@ sequence of 200K samples from a normal distribution (mean 0, variance
 
 ```clojure
 user> (ns examples
-        (:use [histogram.core])
-        (:require (histogram.test [examples :as ex])))
+        (:use [bigml.histogram.core])
+        (:require (bigml.histogram.test [examples :as ex])))
 examples> (def hist (reduce insert! (create) ex/normal-data))
 ```
 
@@ -393,3 +416,9 @@ histogram.
 
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
+
+# License
+
+Copyright (C) 2013 BigML Inc.
+
+Distributed under the Apache License, Version 2.0.
