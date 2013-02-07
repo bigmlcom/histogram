@@ -1,5 +1,9 @@
-(ns histogram.test.examples
-  (:require (histogram [core :as hst])
+;; Copyright 2013 BigML
+;; Licensed under the Apache License, Version 2.0
+;; http://www.apache.org/licenses/LICENSE-2.0
+
+(ns bigml.histogram.test.examples
+  (:require (bigml.histogram [core :as hst])
             (incanter [core :as core]
                       [charts :as charts]
                       [distributions :as dst])))
@@ -62,9 +66,3 @@
         hist (reduce #(apply hst/insert! %1 %2)
                      (hst/create) target-data)]
     (pdf-target-chart hist)))
-
-(defn -main [& args]
-  (normal-example)
-  (varying-bins-example)
-  (gap-weighted-example)
-  (numeric-target-example))
