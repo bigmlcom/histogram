@@ -5,7 +5,7 @@ histograms described in Ben-Haim's [Streaming Parallel Decision
 Trees](http://jmlr.csail.mit.edu/papers/v11/ben-haim10a.html). Inspired
 by Tyree's [Parallel Boosted Regression
 Trees](http://research.engineering.wustl.edu/~tyrees/Publications_files/fr819-tyreeA.pdf),
-the histograms are extended so they may track multiple values.
+the histograms are extended so that they may track multiple values.
 
 The histograms act as an approximation of the underlying dataset. They
 can be used for learning, visualization, discretization, or analysis.
