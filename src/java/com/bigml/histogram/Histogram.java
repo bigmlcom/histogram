@@ -300,7 +300,6 @@ public class Histogram<T extends Target> {
       throw new SumOutOfRangeException("Cannot sum with an empty histogram.");
     }
 
-    double binMin = _bins.firstKey();
     double binMax = _bins.lastKey();
 
     if (p < _minimum) {
@@ -716,25 +715,6 @@ public class Histogram<T extends Target> {
       }
     }
     return binSumMap;
-  }
-
-  private double binGapRange(double p, Bin<T> bin) {
-    Entry<Double, Bin<T>> lower = _bins.lowerEntry(bin.getMean());
-    Entry<Double, Bin<T>> higher = _bins.higherEntry(bin.getMean());
-
-    double range;
-    if (lower == null) {
-      range = bin.getMean() - _minimum;
-    } else if (higher == null) {
-      range = _maximum - bin.getMean();
-    } else {
-      if (p < bin.getMean()) {
-        range = bin.getMean() - lower.getValue().getMean();
-      } else {
-        range = higher.getValue().getMean() - bin.getMean();
-      }
-    }
-    return range;
   }
 
   /*
