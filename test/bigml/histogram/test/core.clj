@@ -4,7 +4,8 @@
 
 (ns bigml.histogram.test.core
   (:import [java.lang Math]
-           [java.util Random])
+           [java.util Random]
+           [com.bigml.histogram SumOutOfRangeException])
   (:use [bigml.histogram.core]
         [clojure.test]))
 
@@ -309,3 +310,8 @@
     (is (== (count data)
             (total-count hist)
             (reduce + (map :count (bins hist)))))))
+
+(deftest exceptions
+  (is (thrown? SumOutOfRangeException (sum (create) 5)))
+  (is (thrown? SumOutOfRangeException
+               (sum (insert! (create) 4) Double/NaN))))

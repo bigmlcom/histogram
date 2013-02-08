@@ -300,6 +300,10 @@ public class Histogram<T extends Target> {
       throw new SumOutOfRangeException("Cannot sum with an empty histogram.");
     }
 
+    if (Double.isNaN(p)) {
+      throw new SumOutOfRangeException("Cannot compute a histogram sum for NaN");
+    }
+
     double binMax = _bins.lastKey();
 
     if (p < _minimum) {
