@@ -197,13 +197,6 @@
   [^Histogram hist]
   (first (uniform hist 2)))
 
-(defn mean
-  "Returns the mean for the points inserted into the histogram."
-  [^Histogram hist]
-  (when-not (empty? (.getBins hist))
-    (.getMean ^Bin (reduce (fn [^Bin b1 ^Bin b2] (.combine b1 b2))
-                           (.getBins hist)))))
-
 (defn percentiles
   "Returns a map of percentiles and their associated locations."
   [^Histogram hist & percentiles]
