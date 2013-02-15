@@ -6,7 +6,6 @@
 package com.bigml.histogram;
 
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import org.json.simple.JSONArray;
 
 public class SumResult<T extends Target> {
@@ -25,10 +24,7 @@ public class SumResult<T extends Target> {
   
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray jsonArray = new JSONArray();
-    try {
-      jsonArray.add(format.parse(format.format(_count)));
-    } catch (ParseException ex) {
-    }
+    jsonArray.add(Utils.roundNumber(_count, format));
     _targetSum.addJSON(jsonArray, format);
     return jsonArray;
   }

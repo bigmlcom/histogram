@@ -6,7 +6,6 @@
 package com.bigml.histogram;
 
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import org.json.simple.JSONArray;
 
 public class Bin<T extends Target> {
@@ -28,11 +27,8 @@ public class Bin<T extends Target> {
 
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray binJSON = new JSONArray();
-    try {
-      binJSON.add(format.parse(format.format(_mean)));
-      binJSON.add(format.parse(format.format(_count)));
-    } catch (ParseException ex) {
-    }
+    binJSON.add(Utils.roundNumber(_mean, format));
+    binJSON.add(Utils.roundNumber(_count, format));
     _target.addJSON(binJSON, format);
     return binJSON;
   }
