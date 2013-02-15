@@ -7,6 +7,7 @@ package com.bigml.histogram;
 
 import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import org.json.simple.JSONArray;
@@ -49,7 +50,10 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
     for (Entry<Object,Double> categoryCount : _counts.entrySet()) {
       Object category = categoryCount.getKey();
       double count = categoryCount.getValue();
-      counts.put(category, Double.valueOf(format.format(count)));
+      try {
+        counts.put(category, format.parse(format.format(count)));
+      } catch (ParseException ex) {
+      }
     }
     binJSON.add(counts);
   }

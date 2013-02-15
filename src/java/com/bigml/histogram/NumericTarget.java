@@ -7,6 +7,7 @@ package com.bigml.histogram;
 
 import com.bigml.histogram.Histogram.TargetType;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import org.json.simple.JSONArray;
 
 public class NumericTarget extends Target<NumericTarget> {
@@ -57,8 +58,11 @@ public class NumericTarget extends Target<NumericTarget> {
     if (_sum == null) {
       binJSON.add(null);
     } else {
-      binJSON.add(Double.valueOf(format.format(_sum)));
-      binJSON.add(Double.valueOf(format.format(_sumSquares)));
+      try {
+        binJSON.add(format.parse(format.format(_sum)));
+        binJSON.add(format.parse(format.format(_sumSquares)));
+      } catch (ParseException ex) {
+      }
     }
   }
 
