@@ -49,7 +49,7 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
     for (Entry<Object,Double> categoryCount : _counts.entrySet()) {
       Object category = categoryCount.getKey();
       double count = categoryCount.getValue();
-      counts.put(category, Double.valueOf(format.format(count)));
+      counts.put(category, Utils.roundNumber(count, format));
     }
     binJSON.add(counts);
   }

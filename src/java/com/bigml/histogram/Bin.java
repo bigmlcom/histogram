@@ -27,8 +27,8 @@ public class Bin<T extends Target> {
 
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray binJSON = new JSONArray();
-    binJSON.add(Double.valueOf(format.format(_mean)));
-    binJSON.add(Double.valueOf(format.format(_count)));
+    binJSON.add(Utils.roundNumber(_mean, format));
+    binJSON.add(Utils.roundNumber(_count, format));
     _target.addJSON(binJSON, format);
     return binJSON;
   }

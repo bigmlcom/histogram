@@ -24,7 +24,7 @@ public class SumResult<T extends Target> {
   
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray jsonArray = new JSONArray();
-    jsonArray.add(Double.valueOf(format.format(_count)));
+    jsonArray.add(Utils.roundNumber(_count, format));
     _targetSum.addJSON(jsonArray, format);
     return jsonArray;
   }

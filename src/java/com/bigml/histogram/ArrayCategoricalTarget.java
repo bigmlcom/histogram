@@ -67,7 +67,7 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> imple
       Object category = categoryIndex.getKey();
       int index = categoryIndex.getValue();
       double count = _target[index];
-      counts.put(category, Double.valueOf(format.format(count)));
+      counts.put(category, Utils.roundNumber(count, format));
     }
     binJSON.add(counts);
   }

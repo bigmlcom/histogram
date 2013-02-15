@@ -57,8 +57,8 @@ public class NumericTarget extends Target<NumericTarget> {
     if (_sum == null) {
       binJSON.add(null);
     } else {
-      binJSON.add(Double.valueOf(format.format(_sum)));
-      binJSON.add(Double.valueOf(format.format(_sumSquares)));
+      binJSON.add(Utils.roundNumber(_sum, format));
+      binJSON.add(Utils.roundNumber(_sumSquares, format));
     }
   }
 
