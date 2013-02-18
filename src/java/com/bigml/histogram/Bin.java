@@ -8,7 +8,7 @@ package com.bigml.histogram;
 import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
-public class Bin<T extends Target> {
+public class Bin<T extends Target> implements Comparable<Bin> {
 
   public Bin(double mean, double count, T target) {
     /* Hack to avoid Java's negative zero */
@@ -100,4 +100,7 @@ public class Bin<T extends Target> {
   private final double _mean;
   private double _count;
 
+  public int compareTo(Bin o) {
+    return Double.compare(getMean(), o.getMean());
+  }
 }

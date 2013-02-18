@@ -323,3 +323,10 @@
          (-> (create)
              (insert! 0)
              (density 0)))))
+
+(deftest reservoir-type
+  (let [data (normal-data 1000)
+        array (reduce insert! (create :reservoir :array) data)
+        tree (reduce insert! (create :reservoir :tree) data)]
+    (= (bins array) (bins tree))
+    (= (uniform array 4) (uniform tree 4))))
