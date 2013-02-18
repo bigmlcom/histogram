@@ -25,7 +25,7 @@ interface, but Java developers can find documented methods in
 For [Leiningen](https://github.com/technomancy/leiningen):
 
 ```clojure
-[bigml/histogram "3.0.1"]
+[bigml/histogram "3.0.2"]
 ```
 
 For [Maven](http://maven.apache.org/):
@@ -38,7 +38,7 @@ For [Maven](http://maven.apache.org/):
 <dependency>
   <groupId>bigml</groupId>
   <artifactId>histogram</artifactId>
-  <version>3.0.1</version>
+  <version>3.0.2</version>
 </dependency>
 ```
 

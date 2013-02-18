@@ -315,3 +315,11 @@
   (is (thrown? SumOutOfRangeException (sum (create) 5)))
   (is (thrown? SumOutOfRangeException
                (sum (insert! (create) 4) Double/NaN))))
+
+(deftest point-density-at-zero
+  (is (== 1 (-> (reduce insert! (create) [-1 0 1])
+                (density 0))))
+  (is (= Double/POSITIVE_INFINITY
+         (-> (create)
+             (insert! 0)
+             (density 0)))))
