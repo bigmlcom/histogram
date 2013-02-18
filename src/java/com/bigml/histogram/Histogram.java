@@ -389,9 +389,12 @@ public class Histogram<T extends Target> {
     if (p < _minimum || p > _maximum) {
       countDensity = 0;
       targetDensity = (T) emptyTarget.clone();
+    } else if (p == _minimum && p == _maximum) {
+      countDensity = Double.POSITIVE_INFINITY;
+      targetDensity = emptyTarget;
     } else if (exact != null) {
-      double higher = Double.longBitsToDouble(Double.doubleToLongBits(p) + 1);
-      double lower = Double.longBitsToDouble(Double.doubleToLongBits(p) - 1);
+      double higher = Math.nextAfter(p, Double.POSITIVE_INFINITY);
+      double lower = Math.nextAfter(p, Double.NEGATIVE_INFINITY);
 
       SumResult<T> lowerResult = extendedDensity(lower);
       SumResult<T> higherResult = extendedDensity(higher);
