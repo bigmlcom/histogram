@@ -329,4 +329,12 @@
         array (reduce insert! (create :reservoir :array) data)
         tree (reduce insert! (create :reservoir :tree) data)]
     (= (bins array) (bins tree))
-    (= (uniform array 4) (uniform tree 4))))
+    (= (uniform array 4) (uniform tree 4)))
+  (let [data (cat-data 1000 false)
+        builder #(reduce (fn [h [x y]] (insert! h x y)) %1 data)
+        array (builder (create :reservoir :array))
+        tree (builder (create :reservoir :tree))]
+    (is (= (extended-sum array 0.33)
+           (extended-sum tree 0.33)))
+    (is (= (extended-sum array 0.66)
+           (extended-sum tree 0.66)))))
