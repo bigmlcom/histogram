@@ -679,7 +679,7 @@ public class Histogram<T extends Target> {
       lastBin = bin;
     }
     
-    SumResult<T> lastSumResult = new SumResult<T>(sum.getCount() + lastBin.getCount() /2, 
+    SumResult<T> lastSumResult = new SumResult<T>(sum.getCount() + lastBin.getCount() / 2, 
                (T) sum.getTargetSum().clone().sum(lastBin.getTarget().clone().mult(0.5)));
     _pointToSumMap.put(_maximum, lastSumResult);
   }
@@ -714,7 +714,7 @@ public class Histogram<T extends Target> {
   private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
     double i1Term = 0.5 * r * r;
     double iTerm = r - i1Term;
-    return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
+    return (U) p.clone().sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
   }
 
   /*
