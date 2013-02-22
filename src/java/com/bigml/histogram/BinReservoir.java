@@ -30,6 +30,7 @@ public abstract class BinReservoir<T extends Target> {
   public boolean isFrozen() {
     return _freezeThreshold != null && _totalCount > _freezeThreshold;
   }
+  
   public long getTotalCount() {
     return _totalCount;
   }

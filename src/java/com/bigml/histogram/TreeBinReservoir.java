@@ -30,7 +30,6 @@ public class TreeBinReservoir<T extends Target> extends BinReservoir<T> {
   @Override
   public void insert(Bin<T> bin) {
     addTotalCount(bin);
-    Bin<T> existingBin = get(bin.getMean());
     if (isFrozen() && getBins().size() == getMaxBins()) {
       Double floorDiff = Double.MAX_VALUE;
       Bin<T> floorBin = floor(bin.getMean());
@@ -47,14 +46,17 @@ public class TreeBinReservoir<T extends Target> extends BinReservoir<T> {
       } else {
         ceilBin.sumUpdate(bin);
       }
-    } else if (existingBin != null) {
-      existingBin.sumUpdate(bin);
-      if (isWeightGaps()) {
-        updateGaps(existingBin);
-      }
     } else {
-       updateGaps(bin);
-      _bins.put(bin.getMean(), bin);
+      Bin<T> existingBin = get(bin.getMean());
+      if (existingBin != null) {
+        existingBin.sumUpdate(bin);
+        if (isWeightGaps()) {
+          updateGaps(existingBin);
+        }
+      } else {
+         updateGaps(bin);
+        _bins.put(bin.getMean(), bin);
+      }
     }
   }
 

@@ -61,11 +61,7 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
   @Override
   public Bin<T> get(double p) {
     int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
-    if (index >= 0) {
-      return _bins.get(index);
-    } else {
-      return null;
-    }
+    return (index >= 0) ? _bins.get(index) : null;
   }
 
   @Override
@@ -95,11 +91,10 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
     int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
     if (index >= 0) {
       index--;
-      return (index >= 0) ? _bins.get(index) : null;
     } else {
       index = Math.abs(index) - 2;
-      return (index >= 0) ? _bins.get(index) : null;
     }
+    return (index >= 0) ? _bins.get(index) : null;
   }
 
   @Override
@@ -107,11 +102,10 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
     int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
     if (index >= 0) {
       index++;
-      return (index < _bins.size()) ? _bins.get(index) : null;
     } else {
       index = Math.abs(index) - 1;
-      return (index < _bins.size()) ? _bins.get(index) : null;
     }
+    return (index < _bins.size()) ? _bins.get(index) : null;
   }
 
   @Override
