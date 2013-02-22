@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import org.json.simple.JSONArray;
 
 /**
@@ -37,6 +36,7 @@ import org.json.simple.JSONArray;
 public class Histogram<T extends Target> {
 
   public static final String DEFAULT_FORMAT_STRING = "#.#####";
+  public static final int RESERVOIR_THRESHOLD = 256;
 
   /**
    * Creates an empty Histogram with the defined number of bins.
@@ -50,21 +50,22 @@ public class Histogram<T extends Target> {
    * then a collection group target types may be provided
    * @param freezeThreshold after this # of inserts, bin locations
    * will 'freeze', increasing the performance of future inserts
+   * @param reservoirType selects the bin reservoir implementation,
+   * defaults to 'array' when # bins < 256 and 'tree' otherwise
    */
   public Histogram(int maxBins, boolean countWeightedGaps,
           Collection<Object> categories, Collection<TargetType> groupTypes,
-          Long freezeThreshold) {
-    _maxBins = maxBins;
-    _bins = new TreeMap<Double, Bin<T>>();
-    _gaps = new TreeSet<Gap<T>>();
-    _binsToGaps = new HashMap<Double, Gap<T>>();
+          Long freezeThreshold, BinReservoirType reservoirType) {
+    if (reservoirType == BinReservoirType.tree ||
+            (reservoirType == null && maxBins > RESERVOIR_THRESHOLD)) {
+      _bins = new TreeBinReservoir<T>(maxBins, countWeightedGaps, freezeThreshold);
+    } else {
+      _bins = new ArrayBinReservoir<T>(maxBins, countWeightedGaps, freezeThreshold);
+    }
     _decimalFormat = new DecimalFormat(DEFAULT_FORMAT_STRING);
-    _countWeightedGaps = countWeightedGaps;
-    _totalCount = 0;
     _missingCount = 0;
     _minimum = null;
     _maximum = null;
-    _freezeThreshold = freezeThreshold;
 
     if (categories != null && !categories.isEmpty()) {
       _targetType = TargetType.categorical;
@@ -91,7 +92,7 @@ public class Histogram<T extends Target> {
    * @param countWeightedGaps true if count weighted gaps are desired
    */
   public Histogram(int maxBins, boolean countWeightedGaps) {
-    this(maxBins, countWeightedGaps, null, null, null);
+    this(maxBins, countWeightedGaps, null, null, null, null);
   }
 
   /**
@@ -220,8 +221,9 @@ public class Histogram<T extends Target> {
    * @param bin the new bin
    */
   public Histogram<T> insertBin(Bin<T> bin) {
-    updateBins(bin);
-    mergeBins();
+    clearCacheMaps();
+    _bins.insert(bin);
+    _bins.merge();
     return this;
   }
 
@@ -243,21 +245,21 @@ public class Histogram<T extends Target> {
    * Returns the maximum number of allowed bins.
    */
   public int getMaxBins() {
-    return _maxBins;
+    return _bins.getMaxBins();
   }
 
   /**
    * Returns the freeze threshold.
    */
   public Long getFreezeThreshold() {
-    return _freezeThreshold;
+    return _bins.getFreezeThreshold();
   }
 
   /**
    * Returns whether gaps are count weighted.
    */
   public boolean isCountWeightedGaps() {
-    return _countWeightedGaps;
+    return _bins.isWeightGaps();
   }
   
   /**
@@ -296,7 +298,7 @@ public class Histogram<T extends Target> {
   public SumResult<T> extendedSum(double p) throws SumOutOfRangeException {
     SumResult<T> result;
     
-    if (_bins.isEmpty()) {
+    if (_bins.getBins().isEmpty()) {
       throw new SumOutOfRangeException("Cannot sum with an empty histogram.");
     }
 
@@ -304,14 +306,14 @@ public class Histogram<T extends Target> {
       throw new SumOutOfRangeException("Cannot compute a histogram sum for NaN");
     }
 
-    double binMax = _bins.lastKey();
+    double binMax = _bins.last().getMean();
 
     if (p < _minimum) {
-      result = new SumResult<T>(0, (T) _bins.firstEntry().getValue().getTarget().init());
+      result = new SumResult<T>(0, (T) _bins.first().getTarget().init());
     } else if (p >= _maximum) {
       result = new SumResult<T>(getTotalCount(), getTotalTargetSum());
     } else if (p == binMax) {
-      Bin<T> lastBin = _bins.lastEntry().getValue();
+      Bin<T> lastBin = _bins.last();
 
       double totalCount = this.getTotalCount();
       double count = totalCount - (lastBin.getCount() / 2d);
@@ -319,32 +321,24 @@ public class Histogram<T extends Target> {
 
       result = new SumResult<T>(count, targetSum);
     } else {
-      T emptyTarget = (T) _bins.firstEntry().getValue().getTarget().init();
-      Entry<Double,Bin<T>> bin_iEntry = _bins.floorEntry(p);
-      Bin<T> bin_i;
-      if (bin_iEntry == null) {
+      T emptyTarget = (T) _bins.first().getTarget().init();
+      Bin<T> bin_i = _bins.floor(p);
+      if (bin_i == null) {
         bin_i = new Bin(_minimum, 0, emptyTarget.clone());
-      } else {
-        bin_i = bin_iEntry.getValue();
       }
       
-      Entry<Double,Bin<T>> bin_i1Entry = _bins.higherEntry(p);
-      Bin<T> bin_i1;
-      if (bin_i1Entry == null) {
+      Bin<T> bin_i1 = _bins.higher(p);
+      if (bin_i1 == null) {
         bin_i1 = new Bin(_maximum, 0, emptyTarget.clone());
-      } else {
-        bin_i1 = bin_i1Entry.getValue();
       }
 
       double prevCount = 0;
       T prevTargetSum = (T) emptyTarget.clone();
 
-      for (Bin<T> bin : _bins.values()) {
-        if (bin.equals(bin_i) || bin_i.getMean() == _minimum) {
-          break;
-        }
-        prevCount += bin.getCount();
-        prevTargetSum.sum(bin.getTarget().clone());
+      if (bin_i.getMean() != _minimum) {
+        SumResult<T> prevSumResult = getPointToSumMap().get(bin_i.getMean());
+        prevCount = prevSumResult.getCount();
+        prevTargetSum = prevSumResult.getTargetSum();
       }
 
       double bDiff = p - bin_i.getMean();
@@ -381,7 +375,7 @@ public class Histogram<T extends Target> {
    * @param p the density estimate point
    */
   public SumResult<T> extendedDensity(double p) {
-    T emptyTarget = (T) _bins.firstEntry().getValue().getTarget().init();
+    T emptyTarget = (T) _bins.first().getTarget().init();
     double countDensity;
     T targetDensity;
 
@@ -401,20 +395,14 @@ public class Histogram<T extends Target> {
       countDensity = (lowerResult.getCount() + higherResult.getCount()) / 2;
       targetDensity = (T) lowerResult.getTargetSum().clone().sum(higherResult.getTargetSum()).mult(0.5);
     } else {
-      Entry<Double, Bin<T>> lowerEntry = _bins.lowerEntry(p);
-      Bin<T> lowerBin;
-      if (lowerEntry == null) {
+      Bin<T> lowerBin = _bins.lower(p);
+      if (lowerBin == null) {
         lowerBin = new Bin(_minimum, 0, emptyTarget.clone());
-      } else {
-        lowerBin = lowerEntry.getValue();
       }
         
-      Entry<Double, Bin<T>> higherEntry = _bins.higherEntry(p);
-      Bin<T> higherBin;
-      if (higherEntry == null) {
+      Bin<T> higherBin = _bins.higher(p);
+      if (higherBin == null) {
         higherBin = new Bin(_maximum, 0, emptyTarget.clone());
-      } else {
-        higherBin = higherEntry.getValue();
       }
 
       double bDiff = p - lowerBin.getMean();
@@ -456,11 +444,9 @@ public class Histogram<T extends Target> {
     double totalCount = getTotalCount();
 
     if (totalCount > 0) {
-      TreeMap<Double, Bin<T>> binSumMap = createBinSumMap();
-
       double gapSize = totalCount / (double) numberOfBins;
-      double minGapSize = Math.max(_bins.firstEntry().getValue().getCount(),
-              _bins.lastEntry().getValue().getCount()) / 2;
+      double minGapSize = Math.max(_bins.first().getCount(),
+              _bins.last().getCount()) / 2;
 
       int splits = numberOfBins;
       if (gapSize < minGapSize) {
@@ -470,7 +456,7 @@ public class Histogram<T extends Target> {
 
       for (int i = 1; i < splits; i++) {
         double targetSum = (double) i * gapSize;
-        double binSplit = findPointForSum(targetSum, binSumMap);
+        double binSplit = findPointForSum(targetSum);
         uniformBinSplits.add(binSplit);
       }
     }
@@ -487,11 +473,9 @@ public class Histogram<T extends Target> {
     double totalCount = getTotalCount();
 
     if (totalCount > 0) {
-      TreeMap<Double, Bin<T>> binSumMap = createBinSumMap();
-
       for (double percentile : percentiles) {
         double targetSum = (double) percentile * totalCount;
-        results.put(percentile, findPointForSum(targetSum, binSumMap));
+        results.put(percentile, findPointForSum(targetSum));
       }
     }
     return results;
@@ -521,9 +505,9 @@ public class Histogram<T extends Target> {
         if (_indexMap != null) {
           ((ArrayCategoricalTarget) newBin.getTarget()).setIndexMap(_indexMap);
         }
-        updateBins(new Bin<T>(bin));
+        _bins.insert(new Bin<T>(bin));
       }
-      mergeBins();
+      _bins.merge();
     }
 
     if (_minimum == null) {
@@ -551,14 +535,14 @@ public class Histogram<T extends Target> {
    * Returns the total number of points in the histogram.
    */
   public double getTotalCount() {
-    return _totalCount;
+    return _bins.getTotalCount();
   }
 
   /**
    * Returns the collection of bins that form the histogram.
    */
   public Collection<Bin<T>> getBins() {
-    return _bins.values();
+    return _bins.getBins();
   }
 
   public JSONArray toJSON(DecimalFormat format) {
@@ -579,14 +563,7 @@ public class Histogram<T extends Target> {
   }
 
   public T getTotalTargetSum() {
-    T target = null;
-    for (Bin<T> bin : _bins.values()) {
-      if (target == null) {
-        target = (T) bin.getTarget().init();
-      }
-      target.sum(bin.getTarget().clone());
-    }
-    return target;
+    return getPointToSumMap().get(_maximum).getTargetSum();
   }
 
   public long getMissingCount() {
@@ -675,53 +652,50 @@ public class Histogram<T extends Target> {
     }
   }
 
-  private void updateBins(Bin<T> bin) {
-    _totalCount += bin.getCount();
-    Bin<T> existingBin = _bins.get(bin.getMean());
-    if (_freezeThreshold != null 
-            && _totalCount > _freezeThreshold
-            && _bins.size() == _maxBins) {
-      Double floorDiff = Double.MAX_VALUE;
-      Entry<Double, Bin<T>> floorEntry = _bins.floorEntry(bin.getMean());
-      if (floorEntry != null) {
-        floorDiff = Math.abs(floorEntry.getValue().getMean() - bin.getMean());
-      }
-      Double ceilDiff = Double.MAX_VALUE;
-      Entry<Double, Bin<T>> ceilEntry = _bins.ceilingEntry(bin.getMean());
-      if (ceilEntry != null) {
-        ceilDiff = Math.abs(ceilEntry.getValue().getMean() - bin.getMean());
-      }
-      if (floorDiff <= ceilDiff) {
-        floorEntry.getValue().sumUpdate(bin);
-      } else {
-        ceilEntry.getValue().sumUpdate(bin);
-      }
-    } else if (existingBin != null) {
-      existingBin.sumUpdate(bin);
-      if (_countWeightedGaps) {
-        updateGaps(existingBin);
-      }
-    } else {
-       updateGaps(bin);
-      _bins.put(bin.getMean(), bin);
+  private void clearCacheMaps() {
+    _sumToBinMap = null;
+    _pointToSumMap = null;
+  }
+  
+  private void refreshCacheMaps() {
+    T emptyTarget = (T) _bins.first().getTarget().init();
+
+    _pointToSumMap = new TreeMap<Double, SumResult<T>>();
+    _pointToSumMap.put(_minimum, new SumResult<T>(0d, emptyTarget));
+    
+    _sumToBinMap =  new TreeMap<Double, Bin<T>>();
+    Bin<T> minBin = new Bin(_minimum, 0d, emptyTarget);
+    Bin<T> maxBin = new Bin(_maximum, 0d, emptyTarget);
+    _sumToBinMap.put(0d, minBin);
+    _sumToBinMap.put((double) getTotalCount(), maxBin);
+    
+    SumResult<T> sum = new SumResult<T>(0d, (T) emptyTarget.init());
+    Bin<T> lastBin = minBin;
+    for (Bin<T> bin : getBins()) {
+      sum = new SumResult<T>(sum.getCount() + (bin.getCount() + lastBin.getCount()) / 2,
+              (T) sum.getTargetSum().clone().sum(bin.getTarget().clone().sum(lastBin.getTarget()).mult(0.5)));
+      _sumToBinMap.put(sum.getCount(), bin);
+      _pointToSumMap.put(bin.getMean(), sum);
+      lastBin = bin;
     }
+    
+    SumResult<T> lastSumResult = new SumResult<T>(sum.getCount() + lastBin.getCount() / 2, 
+               (T) sum.getTargetSum().clone().sum(lastBin.getTarget().clone().mult(0.5)));
+    _pointToSumMap.put(_maximum, lastSumResult);
+  }
+  
+  private TreeMap<Double, Bin<T>> getSumToBinMap() {
+    if (_sumToBinMap == null) {
+      refreshCacheMaps();
+    }
+    return _sumToBinMap;
   }
 
-  private TreeMap<Double, Bin<T>> createBinSumMap() {
-    TreeMap<Double, Bin<T>> binSumMap = new TreeMap<Double, Bin<T>>();
-    Bin<T> minBin = new Bin(_minimum, 0d, _bins.firstEntry().getValue().getTarget().init());
-    Bin<T> maxBin = new Bin(_maximum, 0d, _bins.firstEntry().getValue().getTarget().init());
-    binSumMap.put(0d, minBin);
-    binSumMap.put((double) _totalCount, maxBin);
-    
-    for (Bin<T> bin : _bins.values()) {
-      try {
-        double sum = sum(bin.getMean());
-        binSumMap.put(sum, bin);
-      } catch (SumOutOfRangeException e) {
-      }
+  private TreeMap<Double, SumResult<T>> getPointToSumMap() {
+    if (_pointToSumMap == null) {
+      refreshCacheMaps();
     }
-    return binSumMap;
+    return _pointToSumMap;
   }
 
   /*
@@ -729,17 +703,18 @@ public class Histogram<T extends Target> {
    * starting from the Ben-Haim paper:
    * m = i + (i1 - i) * r
    * s = p + i/2 + (m + i) * r/2
-   * s = p + i/2 + (i + (i1 - i) * r + i) * r/2
-   * s = p + i/2 + (i + r*i1 - r*i + i) * r/2
-   * s = p + i/2 + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
-   * s = p + i/2 + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
-   * s = p + i/2 + r*i - r^2/2*i + r^2/2*i1
-   * s = p + (1/2 + r - r^2/2)*i + r^2/2*i1
+   * p' = p + i/2 (our prev value includes i/2)
+   * s = p' + (i + (i1 - i) * r + i) * r/2
+   * s = p' + (i + r*i1 - r*i + i) * r/2
+   * s = p' + r/2*i + r^2/2*i1 - r^2/2*i + r/2*i
+   * s = p' + r/2*i + r/2*i - r^2/2*i + r^2/2*i1
+   * s = p' + r*i - r^2/2*i + r^2/2*i1
+   * s = p' + (r - r^2/2)*i + r^2/2*i1
    */
   private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
     double i1Term = 0.5 * r * r;
-    double iTerm = 0.5 + r - i1Term;
-    return (U) p.sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
+    double iTerm = r - i1Term;
+    return (U) p.clone().sum(i.clone().mult(iTerm)).sum(i1.clone().mult(i1Term));
   }
 
   /*
@@ -752,21 +727,21 @@ public class Histogram<T extends Target> {
     return i.clone().sum(i1.clone().sum(i.clone().mult(-1)).mult(r)).mult(1 / (m1 - m));
   }
 
-  private double findPointForSum(double s, TreeMap<Double, Bin<T>> binSumMap) {
+  private double findPointForSum(double s) {
     double result;
     if (s <= 0) {
       result = _minimum;
-    } else if (s >= _totalCount) {
+    } else if (s >= _bins.getTotalCount()) {
       result = _maximum;
     } else {
-      Entry<Double, Bin<T>> sumEntry = binSumMap.floorEntry(s);
+      Entry<Double, Bin<T>> sumEntry = getSumToBinMap().floorEntry(s);
       double sumP_i = sumEntry.getKey();
       Bin<T> bin_i = sumEntry.getValue();
       double p_i = bin_i.getMean();
       double m_i = bin_i.getCount();
 
-      Double sumP_i1 = binSumMap.navigableKeySet().higher(sumP_i);
-      Bin<T> bin_i1 = binSumMap.get(sumP_i1);
+      Double sumP_i1 = getSumToBinMap().navigableKeySet().higher(sumP_i);
+      Bin<T> bin_i1 = getSumToBinMap().get(sumP_i1);
       double p_i1 = bin_i1.getMean();
       double m_i1 = bin_i1.getCount();
       
@@ -787,56 +762,6 @@ public class Histogram<T extends Target> {
     }
 
     return result;
-  }
-
-  private void updateGaps(Bin<T> newBin) {
-    Entry<Double, Bin<T>> prevEntry = _bins.lowerEntry(newBin.getMean());
-    if (prevEntry != null) {
-      updateGaps(prevEntry.getValue(), newBin);
-    }
-
-    Entry<Double, Bin<T>> nextEntry = _bins.higherEntry(newBin.getMean());
-    if (nextEntry != null) {
-      updateGaps(newBin, nextEntry.getValue());
-    }
-  }
-
-  private void updateGaps(Bin<T> prevBin, Bin<T> nextBin) {
-    double gapWeight = nextBin.getMean() - prevBin.getMean();
-    if (_countWeightedGaps) {
-      gapWeight *= Math.log(Math.E + Math.min(prevBin.getCount(), nextBin.getCount()));
-    }
-
-    Gap<T> newGap = new Gap<T>(prevBin, nextBin, gapWeight);
-
-    Gap<T> prevGap = _binsToGaps.get(prevBin.getMean());
-    if (prevGap != null) {
-      _gaps.remove(prevGap);
-    }
-
-    _binsToGaps.put(prevBin.getMean(), newGap);
-    _gaps.add(newGap);
-  }
-
-  private void mergeBins() {
-    while (_bins.size() > _maxBins) {
-      Gap<T> smallestGap = _gaps.pollFirst();
-      Bin<T> newBin = smallestGap.getStartBin().combine(smallestGap.getEndBin());
-
-      Gap<T> followingGap = _binsToGaps.get(smallestGap.getEndBin().getMean());
-      if (followingGap != null) {
-        _gaps.remove(followingGap);
-      }
-
-      _bins.remove(smallestGap.getStartBin().getMean());
-      _bins.remove(smallestGap.getEndBin().getMean());
-
-      _binsToGaps.remove(smallestGap.getStartBin().getMean());
-      _binsToGaps.remove(smallestGap.getEndBin().getMean());
-
-      updateGaps(newBin);
-      _bins.put(newBin.getMean(), newBin);
-    }
   }
 
   private static Double findZ(double a, double b, double c) {
@@ -864,20 +789,18 @@ public class Histogram<T extends Target> {
     return roots;
   }
 
+  public enum BinReservoirType {tree, array};
   public enum TargetType {none, numeric, categorical, group, histogram};
   private TargetType _targetType;
-  private final int _maxBins;
-  private final TreeMap<Double, Bin<T>> _bins;
-  private final TreeSet<Gap<T>> _gaps;
-  private final HashMap<Double, Gap<T>> _binsToGaps;
+  private final BinReservoir<T> _bins;
   private final DecimalFormat _decimalFormat;
-  private final boolean _countWeightedGaps;
   private ArrayList<TargetType> _groupTypes;
   private HashMap<Object, Integer> _indexMap;
-  private long _totalCount;
   private long _missingCount;
   private T _missingTarget;
   private Double _minimum;
   private Double _maximum;
-  private Long _freezeThreshold;
+  private TreeMap<Double, Bin<T>> _sumToBinMap;
+  private TreeMap<Double, SumResult<T>> _pointToSumMap;
+
 }

@@ -25,7 +25,7 @@ interface, but Java developers can find documented methods in
 For [Leiningen](https://github.com/technomancy/leiningen):
 
 ```clojure
-[bigml/histogram "3.0.2"]
+[bigml/histogram "3.1.0"]
 ```
 
 For [Maven](http://maven.apache.org/):
@@ -38,7 +38,7 @@ For [Maven](http://maven.apache.org/):
 <dependency>
   <groupId>bigml</groupId>
   <artifactId>histogram</artifactId>
-  <version>3.0.2</version>
+  <version>3.1.0</version>
 </dependency>
 ```
 
@@ -404,16 +404,33 @@ the histogram can suffer if the `:freeze` parameter is too small.
 
 ```clojure
 examples> (time (reduce insert! (create) ex/normal-data))
-"Elapsed time: 391.857 msecs"
+"Elapsed time: 333.5 msecs"
 examples> (time (reduce insert! (create :freeze 1024) ex/normal-data))
-"Elapsed time: 99.92 msecs"
+"Elapsed time: 166.9 msecs"
 ```
 
 # Performance
 
-Insert time scales `log(n)` with respect to the number of bins in the
-histogram.
+There are two implementations of bin reservoirs (which support the
+`insert!` and `merge!` functions). Either of the two implementations,
+`:tree` and `:array`, can be explicitly selected with the `:reservoir`
+parameter.  The `:tree` option is useful for histograms with many bins
+as the insert time scales at `O(log n)` with respect to the # of
+bins. The `:array` option is good for small number of bins since
+inserts are `O(n)` but there's a smaller overhead. If `:reservoir` is
+left unspecified then `:array` is used for histograms with <= 256 bins
+and `:tree` is used for anything larger.
 
+```clojure
+examples> (time (reduce insert! (create :bins 16 :reservoir :tree)
+                        ex/normal-data))
+"Elapsed time: 554.478 msecs"
+examples> (time (reduce insert! (create :bins 16 :reservoir :array)
+                        ex/normal-data))
+"Elapsed time: 183.532 msecs"
+```
+
+Insert times using reservoir defaults:
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
 

@@ -7,8 +7,13 @@
                                 Target SimpleTarget NumericTarget
                                 ArrayCategoricalTarget GroupTarget
                                 MapCategoricalTarget SumResult
-                                MixedInsertException)
+                                MixedInsertException
+                                Histogram$BinReservoirType)
            (java.util HashMap ArrayList)))
+
+(def ^:private clj-to-reservoir-types
+  {:array Histogram$BinReservoirType/array
+   :tree Histogram$BinReservoirType/tree})
 
 (def ^:private clj-to-java-types
   {:none Histogram$TargetType/none
@@ -30,11 +35,14 @@
      :group-types - A sequence of types (:numeric or :categorical) that
                     describing a group target.
      :freeze - After this # of inserts, bin locations will 'freeze',
-               improving the performance of future inserts."
-  [& {:keys [bins gap-weighted? categories group-types freeze]
+               improving the performance of future inserts.
+     :reservoir - Selects the bin reservoir type (:array or :tree).
+                  Defaults to :array for <= 256 bins, otherwise :tree."
+  [& {:keys [bins gap-weighted? categories group-types freeze reservoir]
       :or {bins 64 gap-weighted? false}}]
-  (let [group-types (seq (map clj-to-java-types group-types))]
-    (Histogram. bins gap-weighted? categories group-types freeze)))
+  (let [group-types (seq (map clj-to-java-types group-types))
+        reservoir (clj-to-reservoir-types reservoir)]
+    (Histogram. bins gap-weighted? categories group-types freeze reservoir)))
 
 (defn histogram?
   "Returns true if the input is a histogram."
