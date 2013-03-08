@@ -4,32 +4,13 @@
 
 (ns bigml.histogram.test.core
   (:import [java.lang Math]
-           [java.util Random]
            [com.bigml.histogram SumOutOfRangeException])
   (:use [bigml.histogram.core]
+        [bigml.histogram.test.data]
         [clojure.test]))
 
 (defn- about= [v1 v2 epsilon]
   (>= epsilon (Math/abs (double (- v1 v2)))))
-
-(defn- normal-data [size]
-  (let [^Random rnd (Random.)]
-    (repeatedly size #(.nextGaussian rnd))))
-
-(defn- rand-data [size]
-  (repeatedly size #(rand)))
-
-(defn- cat-data [size with-missing]
-  (repeatedly size
-              #(let [x (rand)
-                     y (cond (< x (/ 1 3)) :apple
-                          (< x (/ 2 3)) :orange
-                          :else :grape)]
-                 [x (if (or (not with-missing) (> 0.5 (rand)))
-                      y nil)])))
-
-(defn- group-data [size with-missing]
-  (map list (repeatedly #(rand)) (cat-data size with-missing)))
 
 (deftest sum-test
   (let [points 10000]
@@ -328,8 +309,21 @@
   (let [data (normal-data 1000)
         array (reduce insert! (create :reservoir :array) data)
         tree (reduce insert! (create :reservoir :tree) data)]
-    (= (bins array) (bins tree))
-    (= (uniform array 4) (uniform tree 4)))
+    (is (= (bins array) (bins tree)))
+    (is (= (uniform array 4) (uniform tree 4))))
+  (let [data (normal-data 1000)
+        array (reduce insert!
+                      (create :reservoir :array
+                              :gap-weighted? true
+                              :freeze 750)
+                      data)
+        tree (reduce insert!
+                     (create :reservoir :tree
+                             :gap-weighted? true
+                             :freeze 750)
+                     data)]
+    (is (= (bins array) (bins tree)))
+    (is (= (uniform array 4) (uniform tree 4))))
   (let [data (cat-data 1000 false)
         builder #(reduce (fn [h [x y]] (insert! h x y)) %1 data)
         array (builder (create :reservoir :array))
