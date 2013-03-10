@@ -44,7 +44,7 @@ public class Gap<T extends Target> implements Comparable<Gap> {
   public int compareTo(Gap t) {
     int result = Double.compare(this.getSpace(), t.getSpace());
     if (result == 0) {
-      result = Integer.valueOf(this.hashCode()).compareTo(t.hashCode());
+      result = getStartBin().compareTo(t.getStartBin());
     }
     return result;
   }
