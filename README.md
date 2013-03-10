@@ -431,6 +431,7 @@ examples> (time (reduce insert! (create :bins 16 :reservoir :array)
 ```
 
 Insert times using reservoir defaults:
+
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
 
