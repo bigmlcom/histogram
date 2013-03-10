@@ -25,7 +25,7 @@ interface, but Java developers can find documented methods in
 For [Leiningen](https://github.com/technomancy/leiningen):
 
 ```clojure
-[bigml/histogram "3.1.0"]
+[bigml/histogram "3.2.0"]
 ```
 
 For [Maven](http://maven.apache.org/):
@@ -38,7 +38,7 @@ For [Maven](http://maven.apache.org/):
 <dependency>
   <groupId>bigml</groupId>
   <artifactId>histogram</artifactId>
-  <version>3.1.0</version>
+  <version>3.2.0</version>
 </dependency>
 ```
 
@@ -431,6 +431,7 @@ examples> (time (reduce insert! (create :bins 16 :reservoir :array)
 ```
 
 Insert times using reservoir defaults:
+
 ![timing chart]
 (https://docs.google.com/spreadsheet/oimg?key=0Ah2oAcudnjP4dG1CLUluRS1rcHVqU05DQ2Z4UVZnbmc&oid=2&zx=mppmmoe214jm)
 

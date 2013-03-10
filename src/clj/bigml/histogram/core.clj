@@ -103,6 +103,11 @@
 (defn- when-double [v]
   (when v (double v)))
 
+(defn insert-simple!
+  "Inserts a point into the histogram (no target)."
+  [^Histogram hist p]
+  (.insert hist (when-double p)))
+
 (defn insert-categorical!
   "Inserts a point with a categorical target into the histogram."
   [^Histogram hist p v]
@@ -126,7 +131,7 @@
 
 (defmethod insert! :none
   ([^Histogram hist p]
-     (.insert hist (when-double p)))
+     (insert-simple! hist p))
   ([^Histogram hist p _]
      (throw (Exception. "Unset histogram can't accept nil a target"))))
 
@@ -171,6 +176,16 @@
                  :count (long (.getCount bin))}
         target (scrub-target (.getTarget bin))]
     (if target (assoc bin-map :target target) bin-map)))
+
+(defn max-bins
+  "Returns the maximum allowed bins for the histogram."
+  [^Histogram hist]
+  (.getMaxBins hist))
+
+(defn bin-count
+  "Returns the current number of bins."
+  [^Histogram hist]
+  (count (.getBins hist)))
 
 (defn total-count
   "Returns the count of the points summarized by the histogram."
