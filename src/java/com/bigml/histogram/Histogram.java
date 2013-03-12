@@ -339,10 +339,12 @@ public class Histogram<T extends Target> {
         bin_i1 = new Bin(_maximum, 0, emptyTarget.clone());
       }
 
-      double prevCount = 0;
-      T prevTargetSum = (T) emptyTarget.clone();
-
-      if (bin_i.getMean() != _minimum) {
+      double prevCount;
+      T prevTargetSum;
+      if (bin_i.getMean() == _minimum) {
+        prevCount = _bins.first().getCount() / 2;
+        prevTargetSum = (T) _bins.first().getTarget().clone().mult(0.5);
+      } else {
         SumResult<T> prevSumResult = getPointToSumMap().get(bin_i.getMean());
         prevCount = prevSumResult.getCount();
         prevTargetSum = prevSumResult.getTargetSum();
