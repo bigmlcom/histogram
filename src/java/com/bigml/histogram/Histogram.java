@@ -221,6 +221,13 @@ public class Histogram<T extends Target> {
    * @param bin the new bin
    */
   public Histogram<T> insertBin(Bin<T> bin) {
+    if (_minimum == null || _minimum > bin.getMean()) {
+      _minimum = bin.getMean();
+    }
+    if (_maximum == null || _maximum < bin.getMean()) {
+      _maximum = bin.getMean();
+    }
+    
     clearCacheMaps();
     _bins.insert(bin);
     _bins.merge();
@@ -641,13 +648,6 @@ public class Histogram<T extends Target> {
     if (point == null) {
       insertMissing(1, (T) target);
     } else {
-      if (_minimum == null || _minimum > point) {
-        _minimum = point;
-      }
-      if (_maximum == null || _maximum < point) {
-        _maximum = point;
-      }
-
       insertBin(new Bin(point, 1, target));
     }
   }
