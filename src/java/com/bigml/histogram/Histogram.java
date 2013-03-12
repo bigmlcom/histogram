@@ -569,8 +569,16 @@ public class Histogram<T extends Target> {
     return toJSONString(_decimalFormat);
   }
 
+  /*
+   * Returns the total sum of the targets for each bin,
+   * returns nil if there are no bins in the histogram.
+   */
   public T getTotalTargetSum() {
-    return getPointToSumMap().get(_maximum).getTargetSum();
+    if (_bins.getBins().isEmpty()) {
+      return null;
+    } else {
+      return getPointToSumMap().get(_maximum).getTargetSum();
+    }
   }
 
   public long getMissingCount() {

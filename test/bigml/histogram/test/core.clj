@@ -339,3 +339,6 @@
                  (insert-bin! {:mean 3 :count 1}))]
     (is (== 1 (minimum hist)))
     (is (== 3 (maximum hist)))))
+
+(deftest nil-target-sum
+  (is (nil? (total-target-sum (create)))))
