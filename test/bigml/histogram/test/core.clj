@@ -332,3 +332,19 @@
            (extended-sum tree 0.33)))
     (is (= (extended-sum array 0.66)
            (extended-sum tree 0.66)))))
+
+(deftest bin-inserts
+  (let [hist (-> (create)
+                 (insert-bin! {:mean 1 :count 1})
+                 (insert-bin! {:mean 3 :count 1}))]
+    (is (== 1 (minimum hist)))
+    (is (== 3 (maximum hist)))))
+
+(deftest nil-target-sum
+  (is (nil? (total-target-sum (create)))))
+
+(deftest sum-edges
+  (let [hist (reduce insert! (create) [0 10])]
+    (is (== 1 (sum hist 5)))
+    (is (== 0.5 (sum hist 0)))
+    (is (== 2 (sum hist 10)))))

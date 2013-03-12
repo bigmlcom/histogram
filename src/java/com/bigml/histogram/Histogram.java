@@ -221,6 +221,13 @@ public class Histogram<T extends Target> {
    * @param bin the new bin
    */
   public Histogram<T> insertBin(Bin<T> bin) {
+    if (_minimum == null || _minimum > bin.getMean()) {
+      _minimum = bin.getMean();
+    }
+    if (_maximum == null || _maximum < bin.getMean()) {
+      _maximum = bin.getMean();
+    }
+    
     clearCacheMaps();
     _bins.insert(bin);
     _bins.merge();
@@ -332,10 +339,12 @@ public class Histogram<T extends Target> {
         bin_i1 = new Bin(_maximum, 0, emptyTarget.clone());
       }
 
-      double prevCount = 0;
-      T prevTargetSum = (T) emptyTarget.clone();
-
-      if (bin_i.getMean() != _minimum) {
+      double prevCount;
+      T prevTargetSum;
+      if (bin_i.getMean() == _minimum) {
+        prevCount = _bins.first().getCount() / 2;
+        prevTargetSum = (T) _bins.first().getTarget().clone().mult(0.5);
+      } else {
         SumResult<T> prevSumResult = getPointToSumMap().get(bin_i.getMean());
         prevCount = prevSumResult.getCount();
         prevTargetSum = prevSumResult.getTargetSum();
@@ -562,8 +571,16 @@ public class Histogram<T extends Target> {
     return toJSONString(_decimalFormat);
   }
 
+  /*
+   * Returns the total sum of the targets for each bin,
+   * returns nil if there are no bins in the histogram.
+   */
   public T getTotalTargetSum() {
-    return getPointToSumMap().get(_maximum).getTargetSum();
+    if (_bins.getBins().isEmpty()) {
+      return null;
+    } else {
+      return getPointToSumMap().get(_maximum).getTargetSum();
+    }
   }
 
   public long getMissingCount() {
@@ -641,13 +658,6 @@ public class Histogram<T extends Target> {
     if (point == null) {
       insertMissing(1, (T) target);
     } else {
-      if (_minimum == null || _minimum > point) {
-        _minimum = point;
-      }
-      if (_maximum == null || _maximum < point) {
-        _maximum = point;
-      }
-
       insertBin(new Bin(point, 1, target));
     }
   }
