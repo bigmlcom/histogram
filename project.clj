@@ -8,7 +8,7 @@
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6"]
-  :profiles {:dev {:dependencies [[incanter/incanter-core "1.3.0"]
-                                  [incanter/incanter-charts "1.3.0"]]}}
+  :profiles {:dev {:dependencies [[incanter/incanter-core "1.4.1"]
+                                  [incanter/incanter-charts "1.4.1"]]}}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.googlecode.json-simple/json-simple "1.1"]])
