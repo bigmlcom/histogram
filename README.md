@@ -102,8 +102,7 @@ for the normal distribution.
 ```clojure
 examples> (ex/sum-density-chart hist) ;; also see (ex/cdf-pdf-chart hist)
 ```
-![Histogram from normal distribution]
-(https://www.evernote.com/shard/s4/sh/acee03ad-4f5f-4fbf-82f1-5dc7301fc260/85e8b22b12e02a302198110ca77a89b2/res/eb14258d-2830-4362-aca4-590c83866946/skitch.png)
+![Histogram from normal distribution](img/normal.png)
 
 The histogram approximates distributions using a constant number of
 bins. This bin limit is a parameter when creating a histogram
@@ -146,8 +145,7 @@ examples> (ex/multi-pdf-chart
            [(reduce insert! (create :bins 8) ex/mixed-normal-data)
             (reduce insert! (create :bins 64) ex/mixed-normal-data)])
 ```
-![8 and 64 bins histograms]
-(https://www.evernote.com/shard/s4/sh/580f6e58-2e9d-42f1-8288-d84013fa962d/38b9d70534c37ff680c68bd2f251d710/res/9451f44b-e364-499e-af78-a827729b9612/skitch.png)
+![8 and 64 bins histograms](img/bin-limit.png)
 
 Another option when creating a histogram is to use *gap
 weighting*. When `:gap-weighted?` is true, the histogram is encouraged
@@ -165,8 +163,7 @@ examples> (ex/multi-pdf-chart
             (reduce insert! (create :bins 8 :gap-weighted? false)
                     ex/normal-data)])
 ```
-![Gap weighting vs. No gap weighting]
-(https://www.evernote.com/shard/s4/sh/526873b6-e8dc-458a-a7e5-805faa66d9a0/e6144df90e693bdba08256bab325f241/res/6acb5020-0e4e-4bc5-8185-249f7f090a88/skitch.png)
+![Gap weighting vs. No gap weighting](img/gap-weighting.png)
 
 # Merging
 
@@ -184,8 +181,7 @@ examples> (let [samples (partition 1000 ex/mixed-normal-data)
                 merged (reduce merge! (create) (take 300 hists))]
             (ex/multi-pdf-chart [(first hists) merged]))
 ```
-![Merged histograms]
-(https://www.evernote.com/shard/s4/sh/3ed19b0c-11a9-4c21-a751-5d5cdaede224/f0429a26c621f89ccaa52e6c476d98bb/res/a6ea07e9-90d5-4309-968b-e1095505a13d/skitch.png)
+![Merged histograms](img/merging.png)
 
 # Targets
 
@@ -281,8 +277,7 @@ examples> (def hist (let [target-data (map (fn [x] [x (make-y x)])
                               target-data)))
 examples> (ex/pdf-target-chart hist)
 ```
-![Numeric target]
-(https://www.evernote.com/shard/s4/sh/34b51a39-b090-4f33-93a2-7be1112b869e/e3d276b3adb347b3c493a295bb585f8d/res/4a254bbb-6111-43cb-826d-f09d8d3048c7/skitch.png)
+![Numeric target](img/targets.png)
 
 Continuing with the same histogram, we can see that `average-target`
 produces values close to original target:
