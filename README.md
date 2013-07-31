@@ -386,7 +386,31 @@ examples> (-> (create :group-types [:categorical :numeric])
   :count 1})
 ```
 
-# Freezing a Histogram
+# Rendering
+
+There are multiple ways to render the charts, see
+[examples.clj](test/bigml/histogram/test/examples.clj).
+An example of rendering a single function, namely cumulative probability:
+
+```clojure
+examples> (def hist (reduce hst/insert! (hst/create) [1 1 2 3 4 4 4 5]))
+examples> (let [{:keys [min max]} (hst/bounds hist)]
+            (core/view (charts/function-plot (hst/cdf hist) min max)))
+```
+
+(`core` and `charts` are [Incanter namespaces](http://liebke.github.io/incanter/).)
+
+To render multiple functions on the same chart, you would use
+ `add-function` with the result of `function-plot`:
+
+```clojure
+examples> (core/view (-> (charts/function-plot (hst/cdf hist) min max :legend true)
+                         (charts/add-function (hst/pdf hist) min max)))
+```
+
+# Performance-related concerns
+
+## Freezing a Histogram
 
 While the ability to adapt to non-stationary data streams is a
 strength of the histograms, it is also computationally expensive. If
@@ -404,7 +428,7 @@ examples> (time (reduce insert! (create :freeze 1024) ex/normal-data))
 "Elapsed time: 166.9 msecs"
 ```
 
-# Performance
+## Performance
 
 There are two implementations of bin reservoirs (which support the
 `insert!` and `merge!` functions). Either of the two implementations,
