@@ -6,6 +6,7 @@
 package com.bigml.histogram;
 
 import com.bigml.histogram.Histogram.TargetType;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
@@ -59,6 +60,21 @@ public class NumericTarget extends Target<NumericTarget> {
     } else {
       binJSON.add(Utils.roundNumber(_sum, format));
       binJSON.add(Utils.roundNumber(_sumSquares, format));
+    }
+  }
+
+  @Override
+  protected void appendTo(final Appendable appendable, final DecimalFormat format) throws IOException {
+    if (appendable == null) {
+      throw new NullPointerException("appendable must not be null");
+    }
+    if (format == null) {
+      throw new NullPointerException("format must not be null");
+    }
+    if (_sum != null) {
+      appendable.append(format.format(_sum));
+      appendable.append("\t");
+      appendable.append(format.format(_sumSquares));
     }
   }
 

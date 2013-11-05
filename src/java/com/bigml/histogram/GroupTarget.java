@@ -6,6 +6,7 @@
 package com.bigml.histogram;
 
 import com.bigml.histogram.Histogram.TargetType;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +74,20 @@ public class GroupTarget extends Target<GroupTarget> {
       target.addJSON(targetsJSON, format);
     }
     binJSON.add(targetsJSON);
+  }
+
+  @Override
+  protected void appendTo(final Appendable appendable, final DecimalFormat format) throws IOException {
+    if (appendable == null) {
+      throw new NullPointerException("appendable must not be null");
+    }
+    if (format == null) {
+      throw new NullPointerException("format must not be null");
+    }
+    for (Target target : _target) {
+      target.appendTo(appendable, format);
+      appendable.append("\t");
+    }
   }
   
   @Override

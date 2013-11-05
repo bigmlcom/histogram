@@ -5,6 +5,7 @@
  */
 package com.bigml.histogram;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -569,6 +570,35 @@ public class Histogram<T extends Target> {
   @Override
   public String toString() {
     return toJSONString(_decimalFormat);
+  }
+
+  /**
+   * Append a text representation of this histogram to the specified appendable.
+   *
+   * @param appendable appendable to append to, must not be null
+   * @throws IOException if an error occurs
+   */
+  public void appendTo(final Appendable appendable) throws IOException {
+    appendTo(appendable, _decimalFormat);
+  }
+
+  /**
+   * Append a text representation of this histogram to the specified appendable.
+   *
+   * @param appendable appendable to append to, must not be null
+   * @param format decimal format, must not be null
+   * @throws IOException if an error occurs
+   */
+  public void appendTo(final Appendable appendable, final DecimalFormat format) throws IOException {
+    if (appendable == null) {
+      throw new NullPointerException("appendable must not be null");
+    }
+    if (format == null) {
+      throw new NullPointerException("format must not be null");
+    }
+    for (Bin<T> bin : getBins()) {
+      bin.appendTo(appendable, format);
+    }
   }
 
   /*
