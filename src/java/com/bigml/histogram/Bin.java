@@ -5,6 +5,7 @@
  */
 package com.bigml.histogram;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
@@ -66,6 +67,28 @@ public class Bin<T extends Target> implements Comparable<Bin> {
   @Override
   public String toString() {
     return toJSON(new DecimalFormat(Histogram.DEFAULT_FORMAT_STRING)).toJSONString();
+  }
+
+  /**
+   * Append a text representation of this bin to the specified appendable.
+   *
+   * @param appendable appendable to append to, must not be null
+   * @param format decimal format, must not be null
+   * @throws IOException if an error occurs
+   */
+  public void appendTo(final Appendable appendable, final DecimalFormat format) throws IOException {
+    if (appendable == null) {
+      throw new NullPointerException("appendable must not be null");
+    }
+    if (format == null) {
+      throw new NullPointerException("format must not be null");
+    }
+    appendable.append(format.format(_mean));
+    appendable.append("\t");
+    appendable.append(format.format(_count));
+    appendable.append("\t");
+    _target.appendTo(appendable, format);
+    appendable.append("\n");
   }
 
   public Bin combine(Bin<T> bin) {

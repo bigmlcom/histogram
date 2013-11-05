@@ -6,6 +6,7 @@
 package com.bigml.histogram;
 
 import com.bigml.histogram.Histogram.TargetType;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -52,6 +53,23 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
       counts.put(category, Utils.roundNumber(count, format));
     }
     binJSON.add(counts);
+  }
+
+  @Override
+  protected void appendTo(final Appendable appendable, final DecimalFormat format) throws IOException {
+    if (appendable == null) {
+      throw new NullPointerException("appendable must not be null");
+    }
+    if (format == null) {
+      throw new NullPointerException("format must not be null");
+    }
+    for (Entry<Object,Double> categoryCount : _counts.entrySet()) {
+      Object category = categoryCount.getKey();
+      double count = categoryCount.getValue();
+      appendable.append(String.valueOf(category));
+      appendable.append("\t");
+      appendable.append(format.format(count));
+    }
   }
 
   @Override
