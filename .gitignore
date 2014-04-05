@@ -8,3 +8,4 @@ pom.xml
 /temp/
 .lein-deps-sum
 /.lein-failures
+/.nrepl-port
