@@ -25,7 +25,7 @@ interface, but Java developers can find documented methods in
 For [Leiningen](https://github.com/technomancy/leiningen):
 
 ```clojure
-[bigml/histogram "3.2.1"]
+[bigml/histogram "4.0.0"]
 ```
 
 For [Maven](http://maven.apache.org/):
