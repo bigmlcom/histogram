@@ -5,11 +5,13 @@
  */
 package com.bigml.histogram;
 
-import java.io.IOException;
-import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
 
-public class Bin<T extends Target> implements Comparable<Bin> {
+import java.io.IOException;
+import java.io.Serializable;
+import java.text.DecimalFormat;
+
+public class Bin<T extends Target> implements Comparable<Bin>, Serializable {
 
   public Bin(double mean, double count, T target) {
     /* Hack to avoid Java's negative zero */

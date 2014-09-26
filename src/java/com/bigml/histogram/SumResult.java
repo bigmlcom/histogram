@@ -5,10 +5,11 @@
  */
 package com.bigml.histogram;
 
-import java.text.DecimalFormat;
 import org.json.simple.JSONArray;
+import java.io.Serializable;
+import java.text.DecimalFormat;
 
-public class SumResult<T extends Target> {
+public class SumResult<T extends Target> implements Serializable {
   public SumResult(double count, T targetSum) {
     _count = count;
     _targetSum = targetSum;

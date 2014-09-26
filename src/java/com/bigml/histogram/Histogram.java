@@ -6,6 +6,7 @@
 package com.bigml.histogram;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ import org.json.simple.JSONArray;
  *
  * @author Adam Ashenfelter (ashenfelter@bigml.com)
  */
-public class Histogram<T extends Target> {
+public class Histogram<T extends Target> implements Serializable {
 
   public static final String DEFAULT_FORMAT_STRING = "#.#####";
   public static final int RESERVOIR_THRESHOLD = 256;
@@ -708,7 +709,7 @@ public class Histogram<T extends Target> {
     Bin<T> maxBin = new Bin(_maximum, 0d, emptyTarget);
     _sumToBinMap.put(0d, minBin);
     _sumToBinMap.put((double) getTotalCount(), maxBin);
-    
+
     SumResult<T> sum = new SumResult<T>(0d, (T) emptyTarget.init());
     Bin<T> lastBin = minBin;
     for (Bin<T> bin : getBins()) {
