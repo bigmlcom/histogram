@@ -520,6 +520,7 @@ public class Histogram<T extends Target> implements Serializable {
       }
       _bins.merge();
     }
+    clearCacheMaps();
 
     if (_minimum == null) {
       _minimum = histogram.getMinimum();
