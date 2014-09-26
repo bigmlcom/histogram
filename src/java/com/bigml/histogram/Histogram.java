@@ -519,6 +519,7 @@ public class Histogram<T extends Target> {
       }
       _bins.merge();
     }
+    clearCacheMaps();
 
     if (_minimum == null) {
       _minimum = histogram.getMinimum();
