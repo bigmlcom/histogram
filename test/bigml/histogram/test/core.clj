@@ -150,7 +150,25 @@
                      (create)
                      (cat-data points false))
         hist2 (reduce insert-bin! (create) (bins hist1))]
-    (= (bins hist1) (bins hist2))))
+    (is (= (bins hist1) (bins hist2)))))
+
+(deftest round-trip-frozen-test
+  (let [points 10000
+        create #(create :freeze 1000)
+        hist1 (reduce (fn [h [x y]] (insert! h x y))
+                     (create)
+                     (cat-data points false))
+        hist2 (reduce insert-bin! (create) (bins hist1))]
+    (is (= (bins hist1) (bins hist2)))))
+
+(deftest round-trip-small-frozen-test
+  (let [points 10000
+        create #(create :freeze 10)
+        hist1 (reduce (fn [h [x y]] (insert! h x y))
+                     (create)
+                     (cat-data points false))
+        hist2 (reduce insert-bin! (create) (bins hist1))]
+    (is (= (bins hist1) (bins hist2)))))
 
 (deftest hist-test
   (is (histogram? (create)))
