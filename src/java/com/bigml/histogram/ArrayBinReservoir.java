@@ -30,7 +30,7 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
     if (index >= 0) {
       _bins.get(index).sumUpdate(bin);
     } else {
-      if (isFrozen()) {
+      if (isFrozen() && _bins.size() == getMaxBins()) {
         int prevIndex = Math.abs(index) - 2;
         int nextIndex = prevIndex + 1;
         double prevDist = (prevIndex >= 0) ? 
