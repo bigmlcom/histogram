@@ -1,13 +1,13 @@
-;; Copyright 2013 BigML
+;; Copyright 2013, 2014, 2015 BigML
 ;; Licensed under the Apache License, Version 2.0
 ;; http://www.apache.org/licenses/LICENSE-2.0
 
 (ns bigml.histogram.test.core
   (:import [java.lang Math]
            [com.bigml.histogram SumOutOfRangeException])
-  (:use [bigml.histogram.core]
-        [bigml.histogram.test.data]
-        [clojure.test]))
+  (:require [bigml.histogram.core :refer :all]
+            [bigml.histogram.test.data :refer :all]
+            [clojure.test :refer :all]))
 
 (defn- about= [v1 v2 epsilon]
   (>= epsilon (Math/abs (double (- v1 v2)))))
@@ -134,15 +134,15 @@
   ;; the tails of the distribution.  With that in mind this test makes
   ;; sure the bins bracketing the weighted histogram have larger
   ;; counts than the bins bracketing the non-weighted histogram.
-  (let [points 10000
+  (let [points 100000
         weighted (bins (reduce insert!
-                               (create :bins 32 :gap-weighted? true)
+                               (create :bins 16 :gap-weighted? true)
                                (normal-data points)))
         classic (bins (reduce insert!
-                              (create :bins 32 :gap-weighted? false)
+                              (create :bins 16 :gap-weighted? false)
                               (normal-data points)))]
-    (> (+ (:count (first weighted) (last weighted)))
-       (+ (:count (first classic) (last classic))))))
+    (is (> (+ (:count (first weighted)) (:count (last weighted)))
+           (+ (:count (first classic)) (:count (last classic)))))))
 
 (deftest round-trip-test
   (let [points 10000

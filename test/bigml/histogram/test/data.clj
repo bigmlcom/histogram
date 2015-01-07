@@ -1,10 +1,10 @@
-;; Copyright 2013 BigML
+;; Copyright 2013, 2014, 2015 BigML
 ;; Licensed under the Apache License, Version 2.0
 ;; http://www.apache.org/licenses/LICENSE-2.0
 
 (ns bigml.histogram.test.data
   (:import [java.util Random])
-  (:use [bigml.histogram.core]))
+  (:require [bigml.histogram.core :refer :all]))
 
 (defn- ^Random make-rnd [seed]
   (Random. (hash (or seed (rand)))))

@@ -1,4 +1,4 @@
-;; Copyright 2013 BigML
+;; Copyright 2013, 2014, 2015 BigML
 ;; Licensed under the Apache License, Version 2.0
 ;; http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,7 +9,7 @@
                                 MapCategoricalTarget SumResult
                                 MixedInsertException
                                 Histogram$BinReservoirType)
-           (java.util HashMap ArrayList)))
+           (java.util HashMap ArrayList Collection Map)))
 
 (def ^:private clj-to-reservoir-types
   {:array Histogram$BinReservoirType/array
@@ -25,7 +25,7 @@
   (assoc (zipmap (vals clj-to-java-types) (keys clj-to-java-types))
     nil :unset))
 
-(defn create
+(defn ^Histogram create
   "Creates a histogram.
 
    Optional parameters:
@@ -51,12 +51,12 @@
 
 (defn- java-target [target]
   (if (sequential? target)
-    (GroupTarget. (ArrayList. (map java-target target)))
+    (GroupTarget. (ArrayList. ^Collection (map java-target target)))
     (let [{:keys [sum sum-squares missing-count counts]} target]
       (cond (contains? target :sum)
             (NumericTarget. sum sum-squares missing-count)
             (contains? target :counts)
-            (MapCategoricalTarget. (HashMap. counts) missing-count)
+            (MapCategoricalTarget. (HashMap. ^Map counts) missing-count)
             (nil? target)
             SimpleTarget/TARGET))))
 
@@ -148,7 +148,7 @@
   (throw (MixedInsertException.)))
 
 (defmethod insert! :default [_ & v]
-  (throw (Exception. (apply str "Invalid insert: " (interpose " " v)))))
+  (throw (Exception. ^String (apply str "Invalid insert: " (interpose " " v)))))
 
 (defmulti ^:private scrub-target class)
 
@@ -318,8 +318,8 @@
                      :categories categories)]
     (doseq [bin bins]
       (insert-bin! hist bin))
-    (when minimum (.setMinimum hist minimum))
-    (when maximum (.setMaximum hist maximum))
+    (when minimum (.setMinimum hist (double minimum)))
+    (when maximum (.setMaximum hist (double maximum)))
     (when missing-bin (insert-bin! hist missing-bin))
     hist))
 

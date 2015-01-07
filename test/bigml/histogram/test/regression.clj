@@ -1,11 +1,11 @@
-;; Copyright 2013, 2014 BigML
+;; Copyright 2013, 2014, 2015 BigML
 ;; Licensed under the Apache License, Version 2.0
 ;; http://www.apache.org/licenses/LICENSE-2.0
 
 (ns bigml.histogram.test.regression
-  (:use [bigml.histogram.core]
-        [bigml.histogram.test.data]
-        [clojure.test]))
+  (:require [bigml.histogram.core :refer :all]
+            [bigml.histogram.test.data :refer :all]
+            [clojure.test :refer :all]))
 
 (deftest regression
   (doseq [impl [:array :tree]]
