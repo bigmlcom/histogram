@@ -5,9 +5,10 @@
  */
 package com.bigml.histogram;
 
+import java.io.Serializable;
 import java.util.Collection;
 
-public abstract class BinReservoir<T extends Target> {
+public abstract class BinReservoir<T extends Target> implements Serializable {
   public BinReservoir(int maxBins, boolean weightGaps, Long freezeThreshold) {
     _maxBins = maxBins;
     _weightGaps = weightGaps;

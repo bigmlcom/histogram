@@ -5,8 +5,9 @@
  */
 package com.bigml.histogram;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public interface CategoricalTarget {
+public interface CategoricalTarget extends Serializable {
   public Map<Object, Double> getCounts();
 }
