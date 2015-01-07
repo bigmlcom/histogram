@@ -214,12 +214,6 @@
   [^Histogram hist max-bins]
   (seq (.uniform hist max-bins)))
 
-(defn median
-  "Returns an approximate median for the points inserted into the
-   histogram."
-  [^Histogram hist]
-  (first (uniform hist 2)))
-
 (defn percentiles
   "Returns a map of percentiles and their associated locations."
   [^Histogram hist & percentiles]
@@ -329,6 +323,30 @@
   (:mean (first (-> (create :bins 1)
                     (merge! hist)
                     (bins)))))
+
+(defn median
+  "Returns a median for the points inserted into the histogram. This
+   will be the true median whenever the histogram has less than the
+   maximum number of bins, otherwise it will be an approximation."
+  [hist]
+  (if (= (bin-count hist) (max-bins hist))
+    ;; Return the approximate median
+    (first (uniform hist 2))
+    ;; Return the exact median when possible
+    (let [bns (bins hist)
+          pop (total-count hist)
+          mid-index (int (/ pop 2))]
+      (loop [pval (ffirst bns)
+             tot 0
+             bns bns]
+        (let [{:keys [mean count]} (first bns)
+              ntot (long (+ tot count))]
+          (cond (>= (inc tot) mid-index tot)
+                (if (odd? pop)
+                  mean
+                  (/ (+ pval mean) 2))
+                (> ntot mid-index) mean
+                :else (recur mean ntot (next bns))))))))
 
 (defn cdf
   "Returns the cumulative distribution function for the histogram."
