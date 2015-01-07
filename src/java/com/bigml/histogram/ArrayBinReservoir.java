@@ -60,13 +60,13 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
 
   @Override
   public Bin<T> get(double p) {
-    int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
+    int index = Collections.binarySearch(_bins, new Bin<T>(p, 0, null));
     return (index >= 0) ? _bins.get(index) : null;
   }
 
   @Override
   public Bin<T> floor(double p) {
-    int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
+    int index = Collections.binarySearch(_bins, new Bin<T>(p, 0, null));
     if (index >= 0) {
       return _bins.get(index);
     } else {
@@ -77,7 +77,7 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
 
   @Override
   public Bin<T> ceiling(double p) {
-    int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
+    int index = Collections.binarySearch(_bins, new Bin<T>(p, 0, null));
     if (index >= 0) {
       return _bins.get(index);
     } else {
@@ -88,7 +88,7 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
 
   @Override
   public Bin<T> lower(double p) {
-    int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
+    int index = Collections.binarySearch(_bins, new Bin<T>(p, 0, null));
     if (index >= 0) {
       index--;
     } else {
@@ -99,7 +99,7 @@ public class ArrayBinReservoir <T extends Target> extends BinReservoir<T> {
 
   @Override
   public Bin<T> higher(double p) {
-    int index = Collections.binarySearch(_bins, new Bin(p, 0, null));
+    int index = Collections.binarySearch(_bins, new Bin<T>(p, 0, null));
     if (index >= 0) {
       index++;
     } else {

@@ -7,7 +7,6 @@
             :url "http://www.apache.org/licenses/LICENSE-2.0"}
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
-  :javac-options ["-target" "1.6" "-source" "1.6"]
   :aliases {"lint" ["do" "check," "eastwood"]
             "distcheck" ["do" "clean," "lint," "test"]}
   :profiles {:dev {:plugins [[jonase/eastwood "0.1.4"]]

@@ -62,6 +62,7 @@ public class ArrayCategoricalTarget extends Target<ArrayCategoricalTarget> imple
   }
   
   @Override
+  @SuppressWarnings("unchecked")
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONObject counts = new JSONObject();
     for (Entry<Object,Integer> categoryIndex : _indexMap.entrySet()) {

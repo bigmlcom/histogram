@@ -22,6 +22,7 @@ public class SumResult<T extends Target> {
     return _targetSum;
   }
   
+  @SuppressWarnings("unchecked")
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray jsonArray = new JSONArray();
     jsonArray.add(Utils.roundNumber(_count, format));

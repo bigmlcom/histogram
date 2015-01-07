@@ -22,10 +22,12 @@ public class Bin<T extends Target> implements Comparable<Bin> {
     _target = target;
   }
 
+  @SuppressWarnings("unchecked")
   public Bin(Bin<T> bin) {
     this(bin.getMean(), bin.getCount(), (T) bin.getTarget().clone());
   }
 
+  @SuppressWarnings("unchecked")
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray binJSON = new JSONArray();
     binJSON.add(Utils.roundNumber(_mean, format));
@@ -50,11 +52,13 @@ public class Bin<T extends Target> implements Comparable<Bin> {
     return _target;
   }
 
+  @SuppressWarnings("unchecked")
   public void sumUpdate(Bin bin) {
     _count += bin.getCount();
     _target.sum(bin.getTarget());
   }
 
+  @SuppressWarnings("unchecked")
   public void update(Bin bin) throws BinUpdateException {
     if (_mean != bin.getMean()) {
       throw new BinUpdateException("Bins must have matching means to update");
@@ -91,7 +95,8 @@ public class Bin<T extends Target> implements Comparable<Bin> {
     appendable.append("\n");
   }
 
-  public Bin combine(Bin<T> bin) {
+  @SuppressWarnings("unchecked")
+  public Bin<T> combine(Bin<T> bin) {
     double count = getCount() + bin.getCount();
     double mean = (getWeight() + bin.getWeight()) / (double) count;
     T newTarget = (T) _target.init();
@@ -101,6 +106,7 @@ public class Bin<T extends Target> implements Comparable<Bin> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean equals(Object obj) {
     if (obj == null) {
       return false;

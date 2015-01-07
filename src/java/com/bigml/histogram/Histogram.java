@@ -303,6 +303,7 @@ public class Histogram<T extends Target> {
    *
    * @param p the sum point
    */
+  @SuppressWarnings("unchecked")
   public SumResult<T> extendedSum(double p) throws SumOutOfRangeException {
     SumResult<T> result;
     
@@ -332,12 +333,12 @@ public class Histogram<T extends Target> {
       T emptyTarget = (T) _bins.first().getTarget().init();
       Bin<T> bin_i = _bins.floor(p);
       if (bin_i == null) {
-        bin_i = new Bin(_minimum, 0, emptyTarget.clone());
+        bin_i = new Bin<T>(_minimum, 0, (T) emptyTarget.clone());
       }
       
       Bin<T> bin_i1 = _bins.higher(p);
       if (bin_i1 == null) {
-        bin_i1 = new Bin(_maximum, 0, emptyTarget.clone());
+        bin_i1 = new Bin<T>(_maximum, 0, (T) emptyTarget.clone());
       }
 
       double prevCount;
@@ -384,6 +385,7 @@ public class Histogram<T extends Target> {
    *
    * @param p the density estimate point
    */
+  @SuppressWarnings("unchecked")
   public SumResult<T> extendedDensity(double p) {
     T emptyTarget = (T) _bins.first().getTarget().init();
     double countDensity;
@@ -407,12 +409,12 @@ public class Histogram<T extends Target> {
     } else {
       Bin<T> lowerBin = _bins.lower(p);
       if (lowerBin == null) {
-        lowerBin = new Bin(_minimum, 0, emptyTarget.clone());
+        lowerBin = new Bin<T>(_minimum, 0, (T) emptyTarget.clone());
       }
         
       Bin<T> higherBin = _bins.higher(p);
       if (higherBin == null) {
-        higherBin = new Bin(_maximum, 0, emptyTarget.clone());
+        higherBin = new Bin<T>(_maximum, 0, (T) emptyTarget.clone());
       }
 
       double bDiff = p - lowerBin.getMean();
@@ -438,6 +440,7 @@ public class Histogram<T extends Target> {
    *
    * @param p the density estimate point
    */
+  @SuppressWarnings("unchecked")
   public T averageTarget(double p) {
     SumResult<T> density = extendedDensity(p);
     return (T) density.getTargetSum().mult(1 / density.getCount());
@@ -497,6 +500,7 @@ public class Histogram<T extends Target> {
    *
    * @param histogram the histogram to be merged
    */
+  @SuppressWarnings("unchecked")
   public Histogram merge(Histogram<T> histogram) throws MixedInsertException {
     if (_indexMap == null && histogram._indexMap != null) {
       if (getBins().isEmpty()) {
@@ -556,6 +560,7 @@ public class Histogram<T extends Target> {
     return _bins.getBins();
   }
 
+  @SuppressWarnings("unchecked")
   public JSONArray toJSON(DecimalFormat format) {
     JSONArray bins = new JSONArray();
     for (Bin<T> bin : getBins()) {
@@ -629,9 +634,10 @@ public class Histogram<T extends Target> {
    * @param count the number of missing values
    * @param count the target sum for the missing values
    */
+  @SuppressWarnings("unchecked")
   public Histogram<T> insertMissing(long count, T target) {
     if (_missingTarget == null) {
-      _missingTarget = (T) target;
+      _missingTarget = target;
     } else {
       _missingTarget.sum(target);
     }
@@ -684,12 +690,13 @@ public class Histogram<T extends Target> {
       throw new MixedInsertException();
     }
   }
-
+  
+  @SuppressWarnings("unchecked")
   private void processPointTarget(Double point, Target target) {
     if (point == null) {
       insertMissing(1, (T) target);
     } else {
-      insertBin(new Bin(point, 1, target));
+      insertBin(new Bin<T>(point, 1, (T) target));
     }
   }
 
@@ -698,6 +705,7 @@ public class Histogram<T extends Target> {
     _pointToSumMap = null;
   }
   
+  @SuppressWarnings("unchecked")
   private void refreshCacheMaps() {
     T emptyTarget = (T) _bins.first().getTarget().init();
 
@@ -705,8 +713,8 @@ public class Histogram<T extends Target> {
     _pointToSumMap.put(_minimum, new SumResult<T>(0d, emptyTarget));
     
     _sumToBinMap =  new TreeMap<Double, Bin<T>>();
-    Bin<T> minBin = new Bin(_minimum, 0d, emptyTarget);
-    Bin<T> maxBin = new Bin(_maximum, 0d, emptyTarget);
+    Bin<T> minBin = new Bin<T>(_minimum, 0d, emptyTarget);
+    Bin<T> maxBin = new Bin<T>(_maximum, 0d, emptyTarget);
     _sumToBinMap.put(0d, minBin);
     _sumToBinMap.put((double) getTotalCount(), maxBin);
     
@@ -752,6 +760,7 @@ public class Histogram<T extends Target> {
    * s = p' + r*i - r^2/2*i + r^2/2*i1
    * s = p' + (r - r^2/2)*i + r^2/2*i1
    */
+  @SuppressWarnings("unchecked")
   private <U extends Target> Target computeSum(double r, U p, U i, U i1) {
     double i1Term = 0.5 * r * r;
     double iTerm = r - i1Term;
@@ -764,6 +773,7 @@ public class Histogram<T extends Target> {
    * r = (x - m) / (m1 - m)
    * s_dx = i - (i1 - i) * (x - m) / (m1 - m)
    */
+  @SuppressWarnings("unchecked")
   private <U extends Target> Target computeDensity(double r, double m, double m1, U i, U i1) {
     return i.clone().sum(i1.clone().sum(i.clone().mult(-1)).mult(r)).mult(1 / (m1 - m));
   }

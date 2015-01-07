@@ -68,6 +68,7 @@ public class GroupTarget extends Target<GroupTarget> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONArray targetsJSON = new JSONArray();
     for (Target target : _target) {
@@ -91,6 +92,7 @@ public class GroupTarget extends Target<GroupTarget> {
   }
   
   @Override
+  @SuppressWarnings("unchecked")
   protected GroupTarget sum(GroupTarget group) {
     for (int i = 0; i < _target.size(); i++) {
       _target.get(i).sum(group.getGroupTarget().get(i));

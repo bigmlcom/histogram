@@ -54,6 +54,7 @@ public class NumericTarget extends Target<NumericTarget> {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     if (_sum == null) {
       binJSON.add(null);

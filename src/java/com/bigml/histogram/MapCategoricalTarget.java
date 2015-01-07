@@ -45,6 +45,7 @@ public class MapCategoricalTarget extends Target<MapCategoricalTarget> implement
   }
   
   @Override
+  @SuppressWarnings("unchecked")
   protected void addJSON(JSONArray binJSON, DecimalFormat format) {
     JSONObject counts = new JSONObject();
     for (Entry<Object,Double> categoryCount : _counts.entrySet()) {

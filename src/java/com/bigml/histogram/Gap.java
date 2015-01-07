@@ -32,6 +32,7 @@ public class Gap<T extends Target> implements Comparable<Gap> {
   }
   
   @Override
+  @SuppressWarnings("unchecked")
   public String toString() {
     JSONArray jsonArray = new JSONArray();
     jsonArray.add(_weight);
