@@ -334,17 +334,16 @@
     (first (uniform hist 2))
     ;; Return the exact median when possible
     (let [bns (bins hist)
-          pop (total-count hist)
+          pop (int (total-count hist))
           mid-index (int (/ pop 2))]
-      (loop [pval (ffirst bns)
+      (loop [pval (:mean (first bns))
              tot 0
              bns bns]
         (let [{:keys [mean count]} (first bns)
               ntot (long (+ tot count))]
-          (cond (>= (inc tot) mid-index tot)
-                (if (odd? pop)
-                  mean
-                  (/ (+ pval mean) 2))
+          (cond (and (odd? pop) (>= ntot (inc mid-index))) mean
+                (and (even? pop) (= (inc tot) (inc mid-index)))
+                (/ (+ pval mean) 2)
                 (> ntot mid-index) mean
                 :else (recur mean ntot (next bns))))))))
 
