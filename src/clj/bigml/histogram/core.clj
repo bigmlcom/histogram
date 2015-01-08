@@ -329,23 +329,24 @@
    will be the true median whenever the histogram has less than the
    maximum number of bins, otherwise it will be an approximation."
   [hist]
-  (if (= (bin-count hist) (max-bins hist))
-    ;; Return the approximate median
-    (first (uniform hist 2))
-    ;; Return the exact median when possible
-    (let [bns (bins hist)
-          pop (int (total-count hist))
-          mid-index (int (/ pop 2))]
-      (loop [pval (:mean (first bns))
-             tot 0
-             bns bns]
-        (let [{:keys [mean count]} (first bns)
-              ntot (long (+ tot count))]
-          (cond (and (odd? pop) (>= ntot (inc mid-index))) mean
-                (and (even? pop) (= (inc tot) (inc mid-index)))
-                (/ (+ pval mean) 2)
-                (> ntot mid-index) mean
-                :else (recur mean ntot (next bns))))))))
+  (when (pos? (total-count hist))
+    (if (= (bin-count hist) (max-bins hist))
+      ;; Return the approximate median
+      (first (uniform hist 2))
+      ;; Return the exact median when possible
+      (let [bns (bins hist)
+            pop (int (total-count hist))
+            mid-index (int (/ pop 2))]
+        (loop [pval (:mean (first bns))
+               tot 0
+               bns bns]
+          (let [{:keys [mean count]} (first bns)
+                ntot (long (+ tot count))]
+            (cond (and (odd? pop) (>= ntot (inc mid-index))) mean
+                  (and (even? pop) (= (inc tot) (inc mid-index)))
+                  (/ (+ pval mean) 2)
+                  (> ntot mid-index) mean
+                  :else (recur mean ntot (next bns)))))))))
 
 (defn cdf
   "Returns the cumulative distribution function for the histogram."

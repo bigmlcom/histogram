@@ -36,7 +36,7 @@ For [Maven](http://maven.apache.org/):
 <dependency>
   <groupId>bigml</groupId>
   <artifactId>histogram</artifactId>
-  <version>4.1.0</version>
+  <version>4.1.1</version>
 </dependency>
 ```
 

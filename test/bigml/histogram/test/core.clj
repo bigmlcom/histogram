@@ -361,6 +361,9 @@
 (deftest nil-target-sum
   (is (nil? (total-target-sum (create)))))
 
+(deftest nil-median
+  (is (nil? (median (create)))))
+
 (deftest sum-edges
   (let [hist (reduce insert! (create) [0 10])]
     (is (== 1 (sum hist 5)))
