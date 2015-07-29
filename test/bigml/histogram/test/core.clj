@@ -364,6 +364,16 @@
 (deftest nil-median
   (is (nil? (median (create)))))
 
+(deftest big-median
+  (is (== (-> (create :bins 6)
+              (insert-bin! {:mean 0 :count 1E10})
+              (insert-bin! {:mean 1 :count 1E10})
+              (insert-bin! {:mean 2 :count 1E10})
+              (insert-bin! {:mean 5 :count 1E10})
+              (insert-bin! {:mean 9 :count 1E10})
+              (median))
+          2)))
+
 (deftest sum-edges
   (let [hist (reduce insert! (create) [0 10])]
     (is (== 1 (sum hist 5)))
