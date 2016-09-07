@@ -1,5 +1,5 @@
 
-(defproject bigml/histogram "4.1.2"
+(defproject bigml/histogram "4.1.3"
   :description "Streaming histograms for Clojure/Java"
   :min-lein-version "2.0.0"
   :url "https://github.com/bigmlcom/histogram"
@@ -10,8 +10,8 @@
   :javac-options ["-source" "1.6" "-target" "1.6"]
   :aliases {"lint" ["do" "check," "eastwood"]
             "distcheck" ["do" "clean," "lint," "test"]}
-  :profiles {:dev {:plugins [[jonase/eastwood "0.1.4"]]
-                   :dependencies [[incanter/incanter-core "1.9.0"]
-                                  [incanter/incanter-charts "1.9.0"]]}}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]]
+                   :dependencies [[incanter/incanter-core "1.9.1"]
+                                  [incanter/incanter-charts "1.9.1"]]}}
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [com.googlecode.json-simple/json-simple "1.1.1"]])
