@@ -13,5 +13,9 @@
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]]
                    :dependencies [[incanter/incanter-core "1.9.1"]
                                   [incanter/incanter-charts "1.9.1"]]}}
+  :deploy-repositories {"releases" {:url "s3://bigml-development-wmlibs"
+                                    :username :env/aws_access_key_id
+                                    :passphrase :env/aws_secret_access_key
+                                    :sign-releases false}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [com.googlecode.json-simple/json-simple "1.1.1"]])
